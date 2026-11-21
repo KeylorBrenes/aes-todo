@@ -1,0 +1,7 @@
+.aes/
+.claude/settings.local.json
+.claude/worktrees/
+.impeccable/config.local.json
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/live/

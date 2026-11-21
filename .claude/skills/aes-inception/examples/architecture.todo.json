@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "To-do: esqueleto que camina (EN-001)",
+    "quality_profile": "showcase",
+    "viewBox": [1040, 520]
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "Usuario", "sublabel": "Navegador", "pos": [40, 220], "size": [150, 72] },
+    { "id": "web", "type": "frontend", "label": "Web", "sublabel": "React + Vite", "pos": [300, 220], "size": [150, 72] },
+    { "id": "api", "type": "backend", "label": "API", "sublabel": "Endpoints de tareas", "pos": [560, 220], "size": [150, 72] },
+    { "id": "db", "type": "database", "label": "Base de datos", "sublabel": "SQLite", "pos": [820, 220], "size": [150, 72] }
+  ],
+  "connections": [
+    { "id": "user-web", "from": "user", "to": "web", "label": "HTTP" },
+    { "id": "web-api", "from": "web", "to": "api", "label": "JSON / REST", "variant": "emphasis" },
+    { "id": "api-db", "from": "api", "to": "db", "label": "SQL" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Qué demuestra EN-001", "items": ["La web llama a la API y muestra lo que devuelve", "La CI compila, prueba y pasa una prueba de punta a punta"] }
+  ]
+}

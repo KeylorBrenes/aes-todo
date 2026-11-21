@@ -1,0 +1,132 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "share": "disabled",
+  "permission": {
+    "external_directory": "deny",
+    "webfetch": "deny",
+    "websearch": "deny",
+    "question": "deny",
+    "task": "deny",
+    "doom_loop": "deny",
+    "skill": {
+      "*": "deny"
+    }
+  },
+  "agent": {
+    "programmer": {
+      "description": "AES Programmer: implementa UNA tarea dentro de su superficie (rama task/<ID>/<TASK>).",
+      "mode": "primary",
+      "prompt": "{file:./.claude/agents/programmer.md}",
+      "steps": 120,
+      "permission": {
+        "edit": {
+          "*": "allow",
+          "tests/acceptance/**": "deny",
+          "specs/**": "deny",
+          "ci/**": "deny",
+          ".github/**": "deny",
+          ".claude/**": "deny",
+          ".opencode/**": "deny",
+          "docs/ci/**": "deny",
+          "opencode.json": "deny",
+          "AGENTS.md": "deny",
+          "CLAUDE.md": "deny"
+        },
+        "bash": {
+          "*": "allow",
+          "git push*": "deny",
+          "git switch*": "deny",
+          "git checkout*": "deny",
+          "git reset*": "deny",
+          "git rebase*": "deny",
+          "git merge*": "deny",
+          "git clean*": "deny",
+          "git worktree*": "deny",
+          "gh *": "deny",
+          "*--no-verify*": "deny",
+          "curl *": "deny",
+          "wget *": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "aes-debugging": "allow",
+          "aes-security-review": "allow",
+          "impeccable": "allow"
+        }
+      }
+    },
+    "mechanic": {
+      "description": "AES Mechanic: cambios mecánicos y acotados dentro de la superficie de una tarea.",
+      "mode": "primary",
+      "prompt": "{file:./.claude/agents/mechanic.md}",
+      "steps": 60,
+      "permission": {
+        "edit": {
+          "*": "allow",
+          "tests/acceptance/**": "deny",
+          "specs/**": "deny",
+          "ci/**": "deny",
+          ".github/**": "deny",
+          ".claude/**": "deny",
+          ".opencode/**": "deny",
+          "docs/ci/**": "deny",
+          "opencode.json": "deny",
+          "AGENTS.md": "deny",
+          "CLAUDE.md": "deny"
+        },
+        "bash": {
+          "*": "allow",
+          "git push*": "deny",
+          "git switch*": "deny",
+          "git checkout*": "deny",
+          "git reset*": "deny",
+          "git rebase*": "deny",
+          "git merge*": "deny",
+          "git clean*": "deny",
+          "git worktree*": "deny",
+          "gh *": "deny",
+          "*--no-verify*": "deny",
+          "curl *": "deny",
+          "wget *": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "aes-debugging": "allow"
+        }
+      }
+    },
+    "qa": {
+      "description": "AES QA: pruebas de aceptación protegidas y RED confirmado, sin conocer la implementación.",
+      "mode": "primary",
+      "prompt": "{file:./.claude/agents/qa.md}",
+      "steps": 120,
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "tests/acceptance/**": "allow",
+          "specs/*/acceptance-test-plan.md": "allow",
+          "specs/*/*.verify": "allow"
+        },
+        "bash": {
+          "*": "allow",
+          "git push*": "deny",
+          "git switch*": "deny",
+          "git checkout*": "deny",
+          "git reset*": "deny",
+          "git rebase*": "deny",
+          "git merge*": "deny",
+          "git clean*": "deny",
+          "git worktree*": "deny",
+          "gh *": "deny",
+          "*--no-verify*": "deny",
+          "curl *": "deny",
+          "wget *": "deny"
+        },
+        "skill": {
+          "*": "deny"
+        }
+      }
+    }
+  }
+}
