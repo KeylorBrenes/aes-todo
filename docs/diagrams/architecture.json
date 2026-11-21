@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "aes-todo: esqueleto que camina (EN-001)",
+    "quality_profile": "showcase",
+    "viewBox": [1120, 560],
+    "output": ".aes/diagrams/architecture.html"
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "Dueño", "sublabel": "Navegador (PC o celular)", "pos": [40, 220], "size": [170, 72] },
+    { "id": "web", "type": "frontend", "label": "Web", "sublabel": "React + TS + Vite", "pos": [290, 220], "size": [160, 72] },
+    { "id": "api", "type": "backend", "label": "Servidor", "sublabel": "Rust · Axum · /api/*", "pos": [610, 220], "size": [170, 72] },
+    { "id": "db", "type": "database", "label": "Base de datos", "sublabel": "SQLite (WAL) · SQLx", "pos": [910, 220], "size": [170, 72] }
+  ],
+  "connections": [
+    { "id": "user-web", "from": "user", "to": "web", "label": "HTTP" },
+    { "id": "web-api", "from": "web", "to": "api", "label": "JSON + cookie de sesión", "variant": "emphasis" },
+    { "id": "api-db", "from": "api", "to": "db", "label": "SQL parametrizado" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Qué demuestra EN-001", "items": ["El binario Axum sirve la web compilada y /api/health", "La web muestra lo que devuelve la API", "La CI compila, prueba y pasa una prueba de punta a punta con Playwright"] },
+    { "dot": "amber", "title": "Reglas", "items": ["Todo /api/* exige sesión, salvo health, crear cuenta e iniciar sesión", "Fechas en UTC fijadas por el servidor", "El dominio no depende de Axum ni de SQLx"] }
+  ]
+}
