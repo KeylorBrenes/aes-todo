@@ -20,13 +20,15 @@
 - **Base de datos:** archivo SQLite creado al arrancar, WAL, una migración inicial `0001_init.sql` sin tablas de dominio (las cuentas llegan con US-001); existe para que el mecanismo de migraciones quede probado.
 - **Servidor:** binario Axum con `GET /api/health`, el 404 uniforme de `/api/*` y la entrega de la web.
 - **Web:** una pantalla con los tres estados (conectando, conectado, sin conexión), con la base visual de `DESIGN.md` (fondo `--ground`, tarjeta `--surface`, Nunito servida localmente, foco con `--action`).
-- **CI:** la sección STACK y `ci/validate.sh` para Rust y Node (la hace el orquestador en este PR, porque son rutas protegidas).
+- **CI:** la sección STACK y `ci/validate.sh` para Rust y Node, más `.claude/aes.env` y `CLAUDE.md`. Son rutas protegidas: las cambia el orquestador en un PR propio (`spec/EN-001-ci`) que se integra **después** de `qa/EN-001` (para que `EN-001.verify` muestre RED aquí) y **antes** de TASK-001 (para que `ci/validate.sh` revise el código del programador).
 
 ## Tareas (3 como máximo, 04 §3)
 | ID | Resultado | Criterios que deja en verde | Superficie | Agente |
 |---|---|---|---|---|
 | TASK-001 | El servidor arranca, crea su base de datos y responde su estado | AC-02 | `TASK-001.scope` | programmer |
 | TASK-002 | El servidor entrega la página, que muestra si está conectada | Todos (última tarea) | `TASK-002.scope` | programmer |
+
+Las pruebas internas del servidor (TASK-001) cubren lo que la aceptación no observa (D-05, D-06): migración aplicada, `503 database_unavailable` y `404 not_found`.
 
 ## Riesgos técnicos y preguntas abiertas
 - Rust no está instalado en la máquina local; la implementación espera a que el humano lo instale.
