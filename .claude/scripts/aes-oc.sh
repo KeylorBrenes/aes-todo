@@ -136,7 +136,7 @@ oc() { # $1 archivo de eventos, $2 archivo de errores, resto: argumentos de open
   (
     unset AES_APP_ID AES_APP_INSTALLATION_ID AES_APP_PRIVATE_KEY GH_TOKEN GITHUB_TOKEN
     export AES_ROLE="$role"
-    cd "$wt" && exec opencode run --agent "$role" -m "$model" --dir "$wt" --format json "$@"
+    cd "$wt" && exec opencode run --agent "$role" -m "$model" --format json "$@"
   ) > "$out" 2>> "$err" &
   local pid=$! limit=${AES_OC_TIMEOUT:-3600} idle_max=${AES_OC_IDLE:-30} t=0 idle=0 size=-1 now
   while kill -0 "$pid" 2>/dev/null; do
