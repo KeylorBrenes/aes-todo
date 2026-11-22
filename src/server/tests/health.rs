@@ -79,7 +79,8 @@ async fn health_creates_the_database_and_applies_migrations() -> Result<(), Box<
 }
 
 #[tokio::test]
-async fn health_reports_database_unavailable_when_the_pool_is_closed() -> Result<(), Box<dyn Error>> {
+async fn health_reports_database_unavailable_when_the_pool_is_closed() -> Result<(), Box<dyn Error>>
+{
     let app = start().await?;
     app.pool.close().await;
 
