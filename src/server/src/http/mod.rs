@@ -20,7 +20,7 @@ pub struct AppState {
 /// Construye el router: `GET /api/health`, el 404 uniforme de `/api/*` y la web compilada.
 pub fn app(state: AppState) -> Router {
     let index = state.web_dist.join("index.html");
-    let assets = ServeDir::new(&state.web_dist).not_found_service(ServeFile::new(index));
+    let assets = ServeDir::new(&state.web_dist).fallback(ServeFile::new(index));
     let api = Router::new()
         .route("/health", get(health::health))
         .fallback(api_not_found);
