@@ -194,34 +194,56 @@ jobs:
             fi
           done
 
-      # ---------- STACK: compilación y pruebas del proyecto (ejemplo .NET + React) ----------
-      - name: Instalar .NET
-        if: ${{ hashFiles('**/*.slnx', '**/*.sln') != '' }}
-        uses: actions/setup-dotnet@v6
+      # ---------- STACK: compilación y pruebas del proyecto (Rust + React) ----------
+      # Mantén estos comandos alineados con ci/validate.sh.
+      - name: Instalar Rust
+        if: ${{ hashFiles('src/server/Cargo.toml') != '' }}
+        uses: dtolnay/rust-toolchain@stable
         with:
-          dotnet-version: 10.0.x
+          components: rustfmt, clippy
 
-      - name: Compilar y probar (.NET)
-        if: ${{ hashFiles('**/*.slnx', '**/*.sln') != '' }}
+      - name: Caché de Rust
+        if: ${{ hashFiles('src/server/Cargo.toml') != '' }}
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/server -> target
+
+      - name: Formato, lint, pruebas y build (servidor)
+        if: ${{ hashFiles('src/server/Cargo.toml') != '' }}
+        working-directory: src/server
         run: |
-          dotnet restore
-          dotnet build --no-restore --configuration Release -warnaserror
-          dotnet test --no-build --configuration Release --logger "console;verbosity=normal"
+          cargo fmt --check
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --locked
+          cargo build --locked
+
+      - name: Instalar cargo-audit
+        if: ${{ hashFiles('src/server/Cargo.lock') != '' }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      - name: Auditoría de dependencias (servidor)
+        if: ${{ hashFiles('src/server/Cargo.lock') != '' }}
+        working-directory: src/server
+        run: cargo audit
 
       - name: Instalar Node
-        if: ${{ hashFiles('web/package.json', 'tests/acceptance/package.json') != '' }}
+        if: ${{ hashFiles('src/web/package.json', 'tests/acceptance/package.json') != '' }}
         uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version: 22
 
-      - name: Lint, pruebas y build (web)
-        if: ${{ hashFiles('web/package.json') != '' }}
-        working-directory: web
+      - name: Lint, tipos, pruebas, build y auditoría (web)
+        if: ${{ hashFiles('src/web/package.json') != '' }}
+        working-directory: src/web
         run: |
           npm ci
           npm run lint
-          npm test --if-present
+          npm run typecheck
+          npm test
           npm run build
+          npm audit --audit-level=high
       # ---------- fin de STACK ----------
 
       # ---------- Aceptación (Playwright) ----------
