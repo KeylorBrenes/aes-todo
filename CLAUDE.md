@@ -17,14 +17,14 @@ Proyecto gestionado con **AES 1.4.0** (https://github.com/KeylorBrenes/AES---Age
 - Hooks en `.claude/hooks/` restringen qué escribe cada rol. Si uno te bloquea, no lo rodees ni se lo pidas a otro agente: reporta BLOCKED para el humano.
 
 ## Estructura
-- `src/`: [aplicación]. `tests/[unitarias]/`: pruebas técnicas (programador).
+- `src/server/`: servidor Rust (Axum + SQLx, SQLite), con sus pruebas en `src/server/tests/` y migraciones en `src/server/migrations/`. `src/web/`: web React + TypeScript + Vite, con pruebas Vitest junto al código (programador).
 - `tests/acceptance/`: pruebas de aceptación (**solo QA**).
 - `specs/<ID>/<ID>.md`: la historia, en lenguaje de cliente; se conserva. `specs/<ID>/plan.md`, `TASK-*`, `acceptance-test-plan.md`: el plan técnico, que se elimina en el cierre. `*.verify`: comandos de verificación, se conservan (**orquestador, QA y humano**).
 - `docs/backlog.md`: única fuente del backlog; el tablero (`node .claude/scripts/aes-board.mjs` → `.aes/board.html`) se genera desde ahí.
 - `docs/`: brief, arquitectura, ADRs, catálogo de diseño, perfil, backlog (con severidad de defectos), hallazgos, `docs/aes/` (DoR/DoD).
 
 ## Comandos
-- Validaciones: `bash ci/validate.sh`
+- Validaciones: `bash ci/validate.sh` (servidor: `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`; web: lint, typecheck, test, build)
 - Aceptación de un elemento: `npm --prefix tests/acceptance test -- --grep "@US-001(?![\w-])"`
 - Guardián: `BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`
 - Compuerta de estabilización: `BASE=origin/dev bash ci/defect-gate.sh start <ID>`
