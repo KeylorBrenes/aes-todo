@@ -5,3 +5,8 @@
 .impeccable/questions/
 .impeccable/mocks/
 .impeccable/live/
+target/
+node_modules/
+dist/
+test-results/
+playwright-report/

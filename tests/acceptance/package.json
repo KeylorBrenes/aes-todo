@@ -1,0 +1,14 @@
+{
+  "name": "aes-todo-acceptance",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pruebas de aceptación de punta a punta de aes-todo (Playwright)",
+  "scripts": {
+    "test": "playwright test",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1"
+  }
+}

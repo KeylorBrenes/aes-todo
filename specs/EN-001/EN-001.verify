@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# AC-07 — La CI compila y revisa el servidor (Rust) y la web (Node) y ejecuta la
+# prueba de punta a punta; si algo falla, el paso queda en rojo.
+#
+# Contrato (specs/EN-001/plan.md, fila «CI (AC-07)»): `ci/validate.sh` y la sección
+# STACK de `.github/workflows/aes.yml` ejecutan, si existen `src/server/Cargo.toml`
+# y `src/web/package.json`:
+#   cargo fmt --check · cargo clippy --all-targets --locked -- -D warnings · cargo test --locked
+#   npm run lint · npm run typecheck · npm test · npm run build
+# Solo la CI ejecuta además `cargo audit` y `npm audit --audit-level=high`.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 2
+
+fail=0
+problem() { echo "FALTA: $*"; fail=1; }
+
+# Devuelve 0 si el texto ($1) contiene el patrón extendido ($2).
+has() { grep -Eq -- "$2" <<<"$1"; }
+
+validate_file="ci/validate.sh"
+workflow_file=".github/workflows/aes.yml"
+
+for file in "$validate_file" "$workflow_file"; do
+  [[ -f "$file" ]] || { problem "no existe $file"; continue; }
+done
+(( fail == 0 )) || exit 1
+
+validate=$(cat "$validate_file")
+workflow=$(cat "$workflow_file")
+# Sección marcada STACK del flujo de CI (solo esa parte es del proyecto).
+stack=$(sed -n '/# ---------- STACK/,/# ---------- fin de STACK/p' "$workflow_file")
+
+if [[ -z "$stack" ]]; then
+  problem "no se encontró la sección «STACK» entre sus marcadores en $workflow_file"
+fi
+
+check_commands() {
+  local label=$1 text=$2
+  has "$text" 'cargo[[:space:]]+fmt[[:space:]]+--check' \
+    || problem "$label: falta «cargo fmt --check» (formato del servidor)"
+  has "$text" 'cargo[[:space:]]+clippy.*-D[[:space:]]+warnings' \
+    || problem "$label: falta «cargo clippy … -D warnings» (reglas de estilo del servidor)"
+  has "$text" 'cargo[[:space:]]+test' \
+    || problem "$label: falta «cargo test» (pruebas del servidor)"
+  has "$text" 'npm[[:space:]]+(--prefix[[:space:]]+src/web[[:space:]]+)?run[[:space:]]+lint' \
+    || problem "$label: falta «npm run lint» (formato y estilo de la web)"
+  has "$text" 'npm[[:space:]]+(--prefix[[:space:]]+src/web[[:space:]]+)?run[[:space:]]+typecheck' \
+    || problem "$label: falta «npm run typecheck» (tipos de la web)"
+  has "$text" 'npm[[:space:]]+(--prefix[[:space:]]+src/web[[:space:]]+)?(run[[:space:]]+)?test' \
+    || problem "$label: falta «npm test» (pruebas de la web)"
+  has "$text" 'npm[[:space:]]+(--prefix[[:space:]]+src/web[[:space:]]+)?run[[:space:]]+build' \
+    || problem "$label: falta «npm run build» (compilación de la web)"
+}
+
+check_commands "$validate_file" "$validate"
+check_commands "STACK de $workflow_file" "$stack"
+
+# Las herramientas solo corren si existen los proyectos (el contrato lo exige así).
+for text_pair in "$validate_file|$validate" "STACK de $workflow_file|$stack"; do
+  label=${text_pair%%|*}
+  text=${text_pair#*|}
+  has "$text" 'src/server/Cargo\.toml' \
+    || problem "$label: no condiciona las revisiones del servidor a que exista src/server/Cargo.toml"
+  has "$text" 'src/web/package\.json' \
+    || problem "$label: no condiciona las revisiones de la web a que exista src/web/package.json"
+done
+
+# El ejemplo .NET ya no pertenece a este proyecto.
+has "$validate" 'dotnet' && problem "$validate_file: todavía contiene el ejemplo .NET"
+has "$stack" 'dotnet' && problem "STACK de $workflow_file: todavía contiene el ejemplo .NET"
+
+# Dependencias: solo la CI las audita.
+has "$stack" 'cargo[[:space:]]+audit' \
+  || problem "STACK de $workflow_file: falta «cargo audit» (dependencias del servidor)"
+has "$stack" 'npm[[:space:]]+audit.*--audit-level=high' \
+  || problem "STACK de $workflow_file: falta «npm audit --audit-level=high» (dependencias de la web)"
+
+# La prueba de punta a punta se ejecuta en la CI.
+has "$workflow" 'playwright[[:space:]]+test' \
+  || problem "$workflow_file: no ejecuta la prueba de punta a punta (playwright test)"
+
+# Un fallo de las revisiones debe dejar la CI en rojo: ningún paso de la sección
+# STACK se marca como tolerante a errores ni se silencia con «|| true».
+has "$stack" 'continue-on-error[[:space:]]*:[[:space:]]*true' \
+  && problem "STACK de $workflow_file: hay pasos con «continue-on-error: true»"
+has "$stack" '[|][|][[:space:]]*true' \
+  && problem "STACK de $workflow_file: hay comandos silenciados con «|| true»"
+
+if (( fail != 0 )); then
+  echo "AC-07 NO se cumple: la CI todavía no revisa el servidor y la web de este proyecto."
+  exit 1
+fi
+
+echo "AC-07 OK: la CI revisa el servidor y la web y ejecuta la prueba de punta a punta."
