@@ -17,7 +17,7 @@ Solo el release en curso está comprometido; los siguientes son una previsión (
 ## Elementos
 | ID | Tipo | Epic | Título | Requiere | Puntos | Prioridad | Release | Severidad | Estado |
 |---|---|---|---|---|---|---|---|---|---|
-| EN-001 | Enabler | — | Para que las historias se puedan probar de punta a punta, necesitamos el servidor Axum con SQLite entregando la web React, con una prueba de punta a punta y la CI en verde | — | 3 | P0 | REL-001 | — | Ready |
+| EN-001 | Enabler | — | Para que las historias se puedan probar de punta a punta, necesitamos el servidor Axum con SQLite entregando la web React, con una prueba de punta a punta y la CI en verde | — | 3 | P0 | REL-001 | — | Accepted |
 | US-001 | Historia | Acceder | Como dueño de la app, quiero crear mi cuenta la primera vez que la abro, para que nadie más pueda reclamarla | EN-001 | 2 | P1 | REL-001 | — | Draft |
 | US-002 | Historia | Acceder | Como dueño de la app, quiero iniciar sesión con mi usuario y contraseña, para que solo yo vea mis tareas | US-001 | 3 | P1 | REL-001 | — | Draft |
 | US-003 | Historia | Acceder | Como dueño de la app, quiero cerrar sesión, para que nadie use mi cuenta en un equipo que no es mío | US-002 | 1 | P1 | REL-001 | — | Draft |
@@ -44,6 +44,9 @@ Solo el release en curso está comprometido; los siguientes son una previsión (
 | SP-001 | Spike | Operar | Para publicar la app, necesitamos decidir dónde corre (plataforma, costo, disco persistente, HTTPS) | EN-001 | 2 | P3 | REL-003 | — | Draft |
 | EN-002 | Enabler | Operar | Para que los datos no se pierdan aunque falle el servidor, necesitamos un respaldo diario automático de la base de datos que se pueda restaurar | SP-001 | 3 | P3 | REL-003 | — | Draft |
 | EN-003 | Enabler | Operar | Para abrir la app desde cualquier equipo, necesitamos publicarla en internet con HTTPS | SP-001, EN-002 | 5 | P3 | REL-003 | — | Draft |
+| BUG-001 | Defecto | — | El texto «Conectado con el servidor» enfocado muestra un anillo gris en vez del de DESIGN.md | EN-001 | 1 | P2 | REL-001 | Menor | Draft |
+| BUG-002 | Defecto | — | Tras reintentar con el ratón, el texto «Conectado con el servidor» queda con recuadro de foco | EN-001 | 1 | P2 | REL-001 | Menor | Draft |
+| BUG-003 | Defecto | — | Con el aviso visible la tarjeta deja un hueco, y mientras dice «Conectando…» el foco queda fuera de los controles | EN-001 | 1 | P2 | REL-001 | Menor | Draft |
 
 ## Epics
 | Epic | Lo que el usuario hace |
