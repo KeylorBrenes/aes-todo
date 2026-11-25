@@ -1,6 +1,6 @@
 # [Proyecto] — instrucciones del proyecto
 
-Proyecto gestionado con **AES 1.5.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Proyecto gestionado con **AES 1.5.1** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
 ## Al empezar cada sesión
 - **Si no existe `docs/backlog.md`, el proyecto todavía no tiene planeamiento:** antes de cualquier otra cosa, usa la skill `aes-inception` y pregúntale al humano por la idea (por bloques de preguntas concretas). No escribas código ni crees historias sin eso.
@@ -20,7 +20,7 @@ Proyecto gestionado con **AES 1.5.0** (https://github.com/KeylorBrenes/AES---Age
 - `src/server/`: servidor Rust (Axum + SQLx, SQLite), con sus pruebas en `src/server/tests/` y migraciones en `src/server/migrations/`. `src/web/`: web React + TypeScript + Vite, con pruebas Vitest junto al código (programador).
 - `tests/acceptance/`: pruebas de aceptación (**solo QA**).
 - `specs/<ID>/<ID>.md`: la historia, en lenguaje de cliente; se conserva. `specs/<ID>/plan.md`, `TASK-*`, `acceptance-test-plan.md`: el plan técnico, que se elimina en el cierre. `*.verify`: comandos de verificación, se conservan (**orquestador, QA y humano**).
-- `docs/backlog.md`: única fuente del backlog; el tablero (`node .claude/scripts/aes-board.mjs` → `.aes/board.html`) se genera desde ahí.
+- `docs/backlog.md`: única fuente del backlog; el tablero `.aes/board.html` se genera desde ahí, solo, tras cada `git pull` (hook local; a mano: `node .claude/scripts/aes-board.mjs`).
 - `docs/`: brief, arquitectura, ADRs, catálogo de diseño, perfil, backlog (con severidad de defectos), hallazgos, `docs/aes/` (DoR/DoD).
 
 ## Comandos
