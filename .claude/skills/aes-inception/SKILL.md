@@ -80,6 +80,7 @@ No sigas preguntando para detallar historias lejanas: ese detalle se pregunta en
 5. **Brief** (`docs/project-brief.md`, plantilla `templates/project-brief.md`), con los releases previstos y la tabla de «por definir».
 6. Si no existe, la copia local de DoR/DoD en `docs/aes/` (el instalador de AES la deja ahí).
 7. **Interfaz**, si el proyecto la tiene (sección 4.1).
+8. **Entorno de la máquina**, en cuanto el humano elige el stack: añade a `AES_DOCTOR_CHECKS` de `.claude/aes.env` las comprobaciones de su toolchain, con una **compilación mínima** por lenguaje compilado (`probe:rust`, `probe:dotnet`; sin ella no se detecta un compilador sin enlazador o sin SDK) y lo que necesite la aceptación (navegadores de Playwright). Ejecuta `bash .claude/scripts/aes-doctor.sh` y, si falla algo, dale al humano **en un solo mensaje** todo lo que tiene que instalar, con el comando o el enlace de cada cosa para su sistema operativo. EN-001 no empieza con el entorno en rojo. El cambio a `aes.env` va en el PR de incepción.
 
 ### 4.1 Interfaz: contexto de producto y dirección visual
 

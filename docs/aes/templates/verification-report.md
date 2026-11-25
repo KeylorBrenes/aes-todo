@@ -45,11 +45,13 @@
 ## Hallazgos
 Cada afirmación se comprobó en su fuente (00 §7): contenido versionado con `git show`/`git cat-file`, comportamiento en el código o ejecutándolo.
 
-| ID | Origen | Severidad propuesta | Hallazgo | Reproducción/evidencia | Criterio afectado |
-|---|---|---|---|---|---|
-| F-1 | De la tarea / preexistente | Crítica / Alta / Media / Menor | | | |
+| ID | Origen | Tipo | Severidad propuesta | Hallazgo | Reproducción/evidencia | Criterio o regla incumplida |
+|---|---|---|---|---|---|---|
+| F-1 | De la tarea / preexistente | Defecto / Hueco de la especificación | Crítica / Alta / Media / Menor | | | |
 
-[«De la tarea»: sobre lo que añade la tarea → ciclo FAIL si se corrige ahora. «Preexistente»: comportamiento ya aceptado o anterior → defecto del backlog con severidad (02 §9.3).]
+- **Origen.** «De la tarea»: sobre lo que añade la tarea. «Preexistente»: comportamiento ya aceptado o anterior → defecto del backlog con severidad.
+- **Tipo.** «Defecto»: el código incumple algo escrito (criterio, nota de diseño, DoD, `DESIGN.md`, ADR); cita la regla. «Hueco de la especificación»: el código hace algo razonable que nada escrito decide; propón qué debería decir la nota o el catálogo.
+- Qué se hace con cada uno lo decide la regla de 02 §9.3, no el verificador.
 
 ## Commits
 [¿Separan estructural y conductual? ¿Algún `struct:` cambia comportamiento?]

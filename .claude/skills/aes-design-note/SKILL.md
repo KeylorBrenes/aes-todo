@@ -28,6 +28,8 @@ Sin razón presente, o con un costo bajo de añadirlo después: **no se usa**, y
 - **Patrón:** el elegido con su razón presente, o «ninguno» y por qué basta el código directo.
 - **Lo que no se hace:** una línea por tentación previsible. Por ejemplo: «no se crea interfaz para `ExpenseService`: una sola implementación», «no se generaliza el formulario para otras entidades», «no se toca `Program.cs` salvo para registrar el endpoint».
 - **Nivel 1 donde no es obvio:** dónde termina la lógica y empieza la entrada/salida; qué dependencias se reciben y por dónde; dónde vive el acceso a datos de esta funcionalidad; en qué frontera se valida y a qué tipo se convierte.
+- **Bordes de la API** (si la tarea añade o cambia rutas): para cada prefijo, qué responden un método no permitido, una ruta desconocida y la barra final, con qué cuerpo, y qué fallback lo cubre. Por defecto los frameworks responden sin el cuerpo del contrato, y el verificador lo prueba.
+- **Comportamiento dinámico de la interfaz** (si la tarea tiene UI): una fila por transición de estado con dónde queda el foco, qué se anuncia y en qué región viva, y si se ve el anillo de foco (con teclado, con ratón o nunca, según el tipo de elemento y `DESIGN.md`); qué regiones vivas están montadas desde la carga; si un mensaje reserva espacio; y qué respuestas deben cubrir las pruebas técnicas (también el éxito con cuerpo inesperado). Consulta el catálogo: lo que ya se decidió en otra pantalla se cita, no se rediseña. Si impeccable está registrada, el resumen de su `shape` es la fuente de los estados.
 - **Catálogo:** si la nota introduce un patrón o un «no» nuevo, anótalo para actualizar `docs/design-catalog.md` en el cierre.
 
 ## 4. Revisa antes de publicarla
@@ -35,6 +37,7 @@ Sin razón presente, o con un costo bajo de añadirlo después: **no se usa**, y
 - ¿Hay algún patrón sin razón presente? Quítalo.
 - ¿Lo que no se hace cubre lo que un programador junior añadiría «por si acaso»?
 - ¿La nota cabe en la superficie de cambio de la tarea? Si exige tocar más, la superficie o la división en tareas está mal.
+- ¿Queda alguna decisión que el programador tendría que improvisar y el verificador va a probar (foco, anuncios, cuerpo de un error, una respuesta inesperada)? Escríbela: cada una que falta es un ciclo FAIL probable.
 - ¿Contradice el catálogo o un ADR? Entonces es una decisión nueva: regístrala (D-NN) o propón un ADR.
 
 ## Lo que esta skill no hace

@@ -6,7 +6,7 @@ model: sonnet
 isolation: worktree
 ---
 
-Eres el rol **Verificador independiente** de AES 1.4.0 (`agent-contracts/verifier.md`).
+Eres el rol **Verificador independiente** de AES 1.4.1 (`agent-contracts/verifier.md`).
 
 ## Tu misión
 Determinar si el cambio cumple el contrato aprobado. No confías en nadie: re-ejecutas, observas y reportas evidencia.
@@ -31,6 +31,8 @@ El orquestador te da el ID del elemento/tarea y la rama. Lee:
    - incluye el **fallo** de cada acción que escribe (respuesta de error, red caída) si el elemento lo cubre;
    - copia en el informe la salida real.
 5. Al terminar no debe quedar nada escuchando en los puertos del proyecto (un hook lo comprueba).
+
+**Reverificación** (el orquestador te indica el commit que ya verificaste): repite los pasos 1 y 2 completos, pero limita la prueba manual a lo que cambió desde ese commit (`git diff <commit>..HEAD`) más una pasada breve por los flujos principales de la tarea. Marca como «fuera del cambio del ciclo» cualquier hallazgo nuevo en lo que no cambió.
 
 ## Lista de revisión
 1. ¿Cada criterio tiene evidencia re-ejecutada por ti?
@@ -61,7 +63,7 @@ Toda afirmación sobre el repositorio se comprueba donde vive: el contenido vers
 - Tabla de evidencia: criterio → método/comando → resultado → evidencia.
 - **Prueba manual agéntica:** comandos, datos usados y salida real.
 - Guardián y señales de desvío.
-- Hallazgos: ID (F-1…), **origen** (de la tarea / preexistente), **severidad propuesta** (Crítica, Alta, Media, Menor; AES 02 §9.1), reproducción, criterio afectado.
+- Hallazgos: ID (F-1…), **origen** (de la tarea / preexistente), **tipo** (defecto: incumple algo escrito, y citas la regla: criterio, nota de diseño, DoD, `DESIGN.md`, ADR; o hueco de la especificación: nada escrito lo decide, y propones qué debería decir), **severidad propuesta** (Crítica, Alta, Media, Menor; AES 02 §9.1), reproducción, criterio afectado. No propones qué hacer con ellos: lo decide la regla de AES 02 §9.3.
 - Aspectos no verificados.
 
 ## Acciones denegadas y procesos (todos los roles)

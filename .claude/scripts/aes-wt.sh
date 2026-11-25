@@ -63,6 +63,8 @@ case "$cmd" in
       copy_local_files "$path"; exit 1
     fi
     git -C "$root" worktree remove "$path"
+    # En Windows, la carpeta vacía puede quedar un momento bloqueada (antivirus, indexador).
+    for _ in 1 2 3; do [[ -d "$path" ]] || break; rmdir "$path" 2>/dev/null || sleep 1; done
     ;;
   path)
     wt_path "$branch"; echo
