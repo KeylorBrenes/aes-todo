@@ -18,6 +18,11 @@
   box-sizing: border-box;
 }
 
+:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
 body {
   margin: 0;
 }
@@ -92,11 +97,6 @@ body {
 
 .retry:active {
   transform: scale(0.98);
-}
-
-.retry:focus-visible {
-  outline: 3px solid var(--action);
-  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
