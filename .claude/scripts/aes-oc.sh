@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AES 1.4.1 — Delegación de un rol a OpenCode (standard/06 §12: binding de roles).
+# AES 1.5.0 — Delegación de un rol a OpenCode (standard/06 §12: binding de roles).
 #
 # El orquestador (Claude Code) delega aquí los roles cuyo binding en .claude/aes.env empieza por
 # "opencode:" (p. ej. AES_BIND_PROGRAMMER="opencode:deepseek/deepseek-flash"). Hace lo mismo que el
@@ -18,7 +18,7 @@
 # Uso:
 #   aes-oc.sh run <rol> <rama> [--model <proveedor/modelo>] [--] [instrucciones adicionales…]
 #   aes-oc.sh report [<ID>]        costo acumulado por elemento y rol (de .aes/costs.csv)
-#   aes-oc.sh binding <rol>        imprime el binding del rol
+#   aes-oc.sh binding <rol> [<rama>]  binding efectivo (el nivel de modelo de la tarea, o el del rol)
 #
 # Ejemplos:
 #   aes-oc.sh run programmer task/US-001/TASK-001
@@ -48,7 +48,6 @@ die() { echo "aes-oc: $*" >&2; exit 2; }
 # cerrar el pipe hace fallar a jq («writing output failed») y, con pipefail, al script.
 events() { local f; for f in "$@"; do [[ -s "$f" ]] && jq -cR 'fromjson? | objects' "$f"; done; return 0; }
 upper() { tr '[:lower:]' '[:upper:]' <<< "$1"; }
-binding() { local v; v="AES_BIND_$(upper "$1")"; printf '%s' "${!v:-}"; }
 
 # --- Costo ---------------------------------------------------------------------------------------
 # Precio de lista en USD por millón (entrada sin caché, salida, entrada en caché) y franjas caras en
@@ -81,18 +80,18 @@ report() {
   local csv=.aes/costs.csv id=${1:-}
   [[ -f "$csv" ]] || { echo "Sin registros todavía (.aes/costs.csv)."; return 0; }
   awk -F, -v id="$id" 'NR > 1 && (id == "" || $2 == id) {
-      k = $2 " " $4; n[k]++; t[k] += $13; tok[k] += $8 + $9 + $10 + $11; tot += $13 }
+      k = $2 " " $4 " " $5; n[k]++; t[k] += $13; tok[k] += $8 + $9 + $10 + $11; tot += $13 }
     END {
-      printf "%-12s %-11s %6s %14s %12s\n", "Elemento", "Rol", "Runs", "Tokens", "USD (est.)"
-      for (k in n) { split(k, a, " "); printf "%-12s %-11s %6d %14d %12.4f\n", a[1], a[2], n[k], tok[k], t[k] }
-      printf "%-12s %-11s %6s %14s %12.4f\n", "TOTAL", "", "", "", tot }' "$csv"
+      printf "%-12s %-11s %-34s %6s %14s %12s\n", "Elemento", "Rol", "Modelo", "Runs", "Tokens", "USD (est.)"
+      for (k in n) { split(k, a, " "); printf "%-12s %-11s %-34s %6d %14d %12.4f\n", a[1], a[2], a[3], n[k], tok[k], t[k] }
+      printf "%-12s %-11s %-34s %6s %14s %12.4f\n", "TOTAL", "", "", "", "", tot }' "$csv"
 }
 
 # --- Comandos ------------------------------------------------------------------------------------
 cmd=${1:-}; shift || true
 case "$cmd" in
   report)  report "${1:-}"; exit 0 ;;
-  binding) [[ -n "${1:-}" ]] || die "uso: aes-oc.sh binding <rol>"; binding "$1"; echo; exit 0 ;;
+  binding) [[ -n "${1:-}" ]] || die "uso: aes-oc.sh binding <rol> [<rama>]"; bash .claude/scripts/aes-bind.sh "$1" "${2:-}"; exit 0 ;;
   run)     ;;
   *)       sed -n '2,/^set -Eeuo/p' "$0" | sed '$d'; exit 2 ;;
 esac
@@ -109,8 +108,9 @@ while [[ $# -gt 0 ]]; do
 done
 extra="$*"
 if [[ -z "$model" ]]; then
-  b=$(binding "$role")
-  [[ "$b" == opencode:* ]] || die "el binding de '$role' es '${b:-vacío}', no OpenCode (AES_BIND_$(upper "$role") en .claude/aes.env)."
+  # Binding efectivo para esta rama: el nivel de modelo de la tarea (aes-bind.sh) o el del rol.
+  b=$(bash .claude/scripts/aes-bind.sh "$role" "$branch")
+  [[ "$b" == opencode:* ]] || die "el binding de '$role' para $branch es '${b:-vacío}', no OpenCode: delega en el subagente de Claude Code${b#claude:} (aes-cycle, «Delegar»)."
   model=${b#opencode:}
 fi
 command -v opencode >/dev/null || die "falta opencode en el PATH."

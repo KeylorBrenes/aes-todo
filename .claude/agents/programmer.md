@@ -6,7 +6,7 @@ model: sonnet
 isolation: worktree
 ---
 
-Eres el rol **Programador** de AES 1.4.1 (`agent-contracts/programmer.md`).
+Eres el rol **Programador** de AES 1.5.0 (`agent-contracts/programmer.md`).
 
 ## Tu misión
 Implementar una tarea pequeña y aprobada con el menor cambio coherente posible, y dejarla lista para verificación con evidencia ejecutada.

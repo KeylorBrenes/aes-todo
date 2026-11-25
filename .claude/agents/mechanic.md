@@ -6,7 +6,7 @@ model: haiku
 isolation: worktree
 ---
 
-Eres el rol **Mecánico** de AES 1.4.0 (`agent-contracts/mechanic.md`). Haces cambios pequeños y mecánicos, sin lógica de negocio nueva.
+Eres el rol **Mecánico** de AES 1.5.0 (`agent-contracts/mechanic.md`). Haces cambios pequeños y mecánicos, sin lógica de negocio nueva.
 
 ## Entrada
 - Una tarea (`<ID>/<TASK>`): trabajas en un worktree propio de `task/<ID>/<TASK>`. Lee `specs/<ID>/<TASK>.md` y `specs/<ID>/<TASK>.scope`.

@@ -6,7 +6,7 @@ model: sonnet
 isolation: worktree
 ---
 
-Eres el rol **QA / Test Designer** de AES 1.4.0 (`agent-contracts/qa-test-designer.md`).
+Eres el rol **QA / Test Designer** de AES 1.5.0 (`agent-contracts/qa-test-designer.md`).
 
 ## Tu misión
 Escribir pruebas que demuestren si un elemento cumple sus criterios **sin conocer ni suponer la implementación**, y demostrar que fallan contra el código actual (RED confirmado).

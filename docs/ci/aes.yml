@@ -94,7 +94,7 @@ jobs:
             exit 1
           else
             echo "::warning::main tiene commits que dev no tiene. Falta un back-merge main → dev (AES 07 §9); el próximo release fallará hasta hacerlo."
-          fi"
+          fi
 
       # ---------- Aprobaciones humanas ----------
       - name: Invalidar aprobaciones tras commits nuevos
