@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AES 1.5.1 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
+# AES 1.5.2 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
 #
 # Comprueba de una vez todo lo que un rol necesita para trabajar en esta máquina, para pedirle al
 # humano lo que falte en una sola ronda y no descubrirlo tarea a tarea:
@@ -130,7 +130,7 @@ if (( ${#models[@]} > 0 )) && section opencode "OpenCode (${models[*]})"; then
   if ! command -v opencode >/dev/null; then
     bad "falta opencode en el PATH"
   else
-    ver=$(opencode --version 2>/dev/null | tr -d '\r' || echo '?')
+    ver=$(opencode --version 2>/dev/null | tr -d '\r' || echo '?'); ver=${ver#v}
     if [[ " ${AES_OC_TESTED:-} " == *" $ver "* ]]; then ok "opencode $ver (probada con AES)"
     else warn "opencode $ver no está entre las versiones probadas (${AES_OC_TESTED:-sin dato}); se comprueban sus opciones"; fi
     help=$(opencode run --help 2>&1 || true); missing=""
