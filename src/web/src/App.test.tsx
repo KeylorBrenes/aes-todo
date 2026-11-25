@@ -60,6 +60,45 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: texts.retry })).toBeVisible();
   });
 
+  it('devuelve el foco a «Reintentar» cuando el reintento vuelve a fallar', async () => {
+    stubFetch(() => Promise.reject(new TypeError('Failed to fetch')));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const retryButton = await screen.findByRole('button', { name: texts.retry });
+    await user.tab();
+    expect(retryButton).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: texts.retry })).toHaveFocus();
+    });
+  });
+
+  it('no deja el foco en el documento cuando el reintento tiene éxito', async () => {
+    const fetchMock = stubFetch(() => Promise.resolve(jsonResponse({ status: 'ok' })));
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const retryButton = await screen.findByRole('button', { name: texts.retry });
+    await user.tab();
+    expect(retryButton).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(texts.connected);
+    });
+    expect(document.activeElement).not.toBe(document.body);
+    expect(screen.getByRole('main')).toContainElement(
+      document.activeElement as HTMLElement | null,
+    );
+  });
+
   it('«Reintentar» vuelve a consultar y muestra «Conectado con el servidor» sin aviso', async () => {
     const fetchMock = stubFetch(() => Promise.resolve(jsonResponse({ status: 'ok' })));
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
