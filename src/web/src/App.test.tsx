@@ -134,6 +134,74 @@ describe('App', () => {
     expect(status).toHaveFocus();
   });
 
+  it('marca el estado vacío mientras no hay conexión y lo saca de esa clase al conectar', async () => {
+    const fetchMock = stubFetch(() => Promise.resolve(jsonResponse({ status: 'ok' })));
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const status = await screen.findByRole('status');
+    expect(status.textContent).toBe('');
+    expect(status).toHaveClass('status-empty');
+
+    await user.click(await screen.findByRole('button', { name: texts.retry }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(texts.connected);
+    });
+    expect(screen.getByRole('status')).not.toHaveClass('status-empty');
+  });
+
+  it('enfoca el estado mientras dice «Conectando…» y sigue ahí al conectar', async () => {
+    let resolveFetch: (response: Response) => void = () => undefined;
+    const pending = new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    });
+    const fetchMock = stubFetch(() => pending);
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: texts.retry }));
+
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent(texts.checking);
+    expect(status).toHaveFocus();
+
+    resolveFetch(jsonResponse({ status: 'ok' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(texts.connected);
+    });
+    expect(status).toHaveFocus();
+  });
+
+  it('enfoca el estado durante «Conectando…» y vuelve a «Reintentar» si falla', async () => {
+    let rejectFetch: (error: Error) => void = () => undefined;
+    const pending = new Promise<Response>((_resolve, reject) => {
+      rejectFetch = reject;
+    });
+    const fetchMock = stubFetch(() => pending);
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: texts.retry }));
+
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent(texts.checking);
+    expect(status).toHaveFocus();
+
+    rejectFetch(new TypeError('Failed to fetch'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: texts.retry })).toHaveFocus();
+    });
+  });
+
   it('«Reintentar» vuelve a consultar y muestra «Conectado con el servidor» sin aviso', async () => {
     const fetchMock = stubFetch(() => Promise.resolve(jsonResponse({ status: 'ok' })));
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
