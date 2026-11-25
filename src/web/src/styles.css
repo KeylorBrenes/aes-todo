@@ -1,0 +1,117 @@
+:root {
+  --ground: #f6f1eb;
+  --surface: #ffffff;
+  --ink: #2d2a26;
+  --ink-muted: #6e665c;
+  --line: #cfc6ba;
+  --action: #d63d1a;
+  --on-action: #ffffff;
+
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--ground);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+.page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background-color: var(--ground);
+}
+
+.card {
+  width: 100%;
+  max-width: 640px;
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  padding: clamp(20px, 8vw, 48px);
+  border-radius: 20px;
+  background-color: var(--surface);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.75rem, 8vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.status {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* El estado recibe el foco por programa tras un reintento: anillo neutro, no el
+   color de acción, que DESIGN.md reserva a lo que se puede hacer. */
+.status:focus {
+  outline: 3px solid var(--ink-muted);
+  outline-offset: 2px;
+}
+
+.notice {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+.notice-text {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.retry {
+  min-height: 44px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--action);
+  color: var(--on-action);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease-out;
+}
+
+.retry:hover {
+  filter: brightness(0.94);
+}
+
+.retry:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retry {
+    transition: none;
+  }
+
+  .retry:active {
+    transform: none;
+  }
+}
