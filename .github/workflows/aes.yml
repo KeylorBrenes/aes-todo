@@ -1,4 +1,4 @@
-# AES 1.3.0 — workflow de CI del proyecto (capa L3). Ver standard/05 §12, 07 §7–9 y profiles/reference/claude-code-subagents/README.md.
+# AES 1.4.1 — workflow de CI del proyecto (capa L3). Ver standard/05 §12, 07 §7–9 y profiles/reference/claude-code-subagents/README.md.
 #
 # Dos ramas protegidas: dev (lo integrado) y main (lo liberado). Un único job "aes" (el check
 # obligatorio de ambos rulesets). Primero se comprueba la ruta: a main solo llegan releases
@@ -94,7 +94,7 @@ jobs:
             exit 1
           else
             echo "::warning::main tiene commits que dev no tiene. Falta un back-merge main → dev (AES 07 §9); el próximo release fallará hasta hacerlo."
-          fi"
+          fi
 
       # ---------- Aprobaciones humanas ----------
       - name: Invalidar aprobaciones tras commits nuevos
@@ -103,10 +103,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
         run: |
-          # Una aprobación vale para los commits que vio quien la dio.
+          # Una aprobación vale para los commits que vio quien la dio. Excepción: aes:deps-approved se
+          # conserva si los commits nuevos no cambian manifiestos ni lockfiles (la aprobación cubre las
+          # mismas dependencias). Si no se puede comprobar (force push, script antiguo), se quita.
           for l in aes:verified aes:deps-approved aes:markers-approved; do
             if [[ ",$LABELS," == *",$l,"* ]]; then
+              if [[ "$l" == aes:deps-approved ]] && grep -q -- '--deps-changed' "$AES_CI/aes-guard.sh" \
+                 && git cat-file -e "$BEFORE^{commit}" 2>/dev/null && git merge-base --is-ancestor "$BEFORE" "$AFTER" \
+                 && [[ -z "$(bash "$AES_CI/aes-guard.sh" --deps-changed "$BEFORE" "$AFTER")" ]]; then
+                echo "Se conserva '$l': los commits nuevos no cambian dependencias."
+                continue
+              fi
               gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/$(jq -rn --arg l "$l" '$l|@uri')" --silent
               echo "Quitada '$l': hay commits nuevos desde la aprobación."
             fi
