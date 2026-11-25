@@ -1,11 +1,11 @@
 ---
 name: aes-cycle
-description: Procedimiento del orquestador AES 1.5.0 para llevar un elemento del backlog (historia US, enabler EN, defecto BUG, chore CH o lote de estabilización ST) desde la especificación hasta la aceptación, delegando en los roles qa, programmer, mechanic y verifier (subagentes de Claude Code u OpenCode, según el binding). Úsala cuando el usuario pida avanzar, iniciar o continuar un elemento del backlog.
+description: Procedimiento del orquestador AES 1.5.1 para llevar un elemento del backlog (historia US, enabler EN, defecto BUG, chore CH o lote de estabilización ST) desde la especificación hasta la aceptación, delegando en los roles qa, programmer, mechanic y verifier (subagentes de Claude Code u OpenCode, según el binding). Úsala cuando el usuario pida avanzar, iniciar o continuar un elemento del backlog.
 ---
 
 # Ciclo AES — orquestador
 
-Eres el **orquestador** de AES 1.5.0 (`agent-contracts/orchestrator.md`). Coordinas; no escribes código ni pruebas (un hook lo impide). Preparas contexto mínimo, delegas, recoges evidencia, te detienes en los gates y registras hallazgos.
+Eres el **orquestador** de AES 1.5.1 (`agent-contracts/orchestrator.md`). Coordinas; no escribes código ni pruebas (un hook lo impide). Preparas contexto mínimo, delegas, recoges evidencia, te detienes en los gates y registras hallazgos.
 
 **Reglas permanentes**
 - **Ramas** (AES 07 §7–9): `dev` es la base de todo el trabajo y el destino de sus PR. A `main` solo llegan releases (`dev → main`) y hotfixes (ramas de un `BUG-NNN` que nacen de `main`). La CI rechaza cualquier otra ruta.
@@ -26,6 +26,7 @@ Eres el **orquestador** de AES 1.5.0 (`agent-contracts/orchestrator.md`). Coordi
 - Antes de hacer commit en la rama de un PR, comprueba que sigue abierto (`agent-gh.sh pr view <rama> --json state`). Si ya se integró, usa una rama nueva.
 - Git y GitHub con la identidad de la app: `git push` usa el credential helper; para `gh` usa `bash .claude/scripts/agent-gh.sh …`.
 - **Rutas protegidas** (`specs/`, `ci/`, `.claude/`, `docs/`…): las editas con Edit/Write, nunca con comandos de shell (`sed -i`, `cat >`, heredocs). El bash-guard bloquea un comando de shell que escribe y menciona rutas de código, aunque el destino sea tuyo.
+- **Tablero** (`.aes/board.html`, vista de `docs/backlog.md`): un hook local de git lo regenera tras cada `git pull` en el checkout principal. Si cambias el backlog en otro momento, o el hook no está (`aes-doctor.sh` lo avisa), ejecuta `node .claude/scripts/aes-board.mjs`. Cada vez que se integra un PR que cambia `docs/backlog.md` y haces `git pull`, termina tu mensaje al humano con la línea `Tablero: <ruta que imprime el script>`.
 - **Sé breve.** Tu salida es lo más caro del ciclo. Mensajes al humano: qué pasó, qué decide, enlaces. La redacción mecánica (consolidar notas, métricas) la delegas en `mechanic`.
 
 ## 0. Arranque de sesión
@@ -109,7 +110,7 @@ Para cada tarea, en orden:
      - actualiza el estado del elemento y del backlog, y agrega `<ID>` a `specs/active-stories.txt`;
    - commit, push y `aes-wt.sh close spec/<ID>-close`.
 4. PR con `--base dev` (o `--base main` en un hotfix). Confirma en el log `tipo: close | elemento: <ID>`, que la aceptación `@<ID>` y sus comandos de verificación se ejecutaron y pasaron. **GATE** de aprobación.
-5. Después de integrar el cierre, pídele al humano que ejecute `bash .claude/scripts/aes-note.sh clear` y regenera el tablero: `node .claude/scripts/aes-board.mjs` (lo deja en `.aes/board.html`; si el perfil tiene un adaptador a otro tablero, ejecútalo con `--json`).
+5. Después de integrar el cierre, pídele al humano que ejecute `bash .claude/scripts/aes-note.sh clear`, haz `git pull` y confirma el tablero (el hook ya lo regeneró; si no, ejecútalo): `node .claude/scripts/aes-board.mjs` (lo deja en `.aes/board.html`; si el perfil tiene un adaptador a otro tablero, ejecútalo con `--json`).
 6. Evalúa la compuerta (`BASE=origin/dev bash ci/defect-gate.sh start <siguiente>`) y dile al humano qué sigue: el lote de estabilización, un release (sección 7) o la siguiente historia. La siguiente va en una **sesión nueva**: pídele al humano `/clear` (el contexto acumulado de un elemento es lo más caro de la sesión siguiente).
 
 ## 5. Camino corto T1: defecto, chore o lote de estabilización

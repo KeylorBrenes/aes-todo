@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// AES 1.3.0 — Vistas del backlog (standard/02 §11).
+// AES 1.5.1 — Vistas del backlog (standard/02 §11).
 //
 // El backlog vive en un archivo (docs/backlog.md) y es la única fuente de verdad. Este script
 // genera vistas en una sola dirección:
@@ -7,12 +7,47 @@
 //   - JSON (--json), para que un adaptador lo publique en GitHub Projects, Trello, GitLab…
 //
 // Uso: node .claude/scripts/aes-board.mjs [docs/backlog.md] [--json] [--out <archivo>]
+//      node .claude/scripts/aes-board.mjs --install-hook   regenera el tablero solo tras cada pull
+//      node .claude/scripts/aes-board.mjs --check-hook     ¿está instalado? (sale con 1 si no)
+//
+// El hook (post-merge y post-rewrite de git, locales: no se versionan) solo actúa en el checkout
+// principal, nunca en los worktrees de los roles, y no hace nada si falta node o el backlog.
 //
 // La tabla del backlog se reconoce por sus encabezados (en cualquier orden): ID, Tipo, Título,
 // Requiere, Puntos, Prioridad, Severidad, Estado y, opcionales, Epic y Release (02 §12). Solo ID,
 // Título y Estado son imprescindibles. El tablero filtra por release y muestra el avance de cada uno.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, chmodSync } from 'node:fs';
+import { dirname, resolve, join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
+
+// --- Hook de git: tablero al día sin que nadie lo pida ------------------------------------------
+const HOOK_MARK = '# aes-board: regenera .aes/board.html';
+const HOOK = `#!/bin/sh
+${HOOK_MARK} tras actualizar el checkout principal (AES 02 §11).
+[ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ] || exit 0
+[ -f docs/backlog.md ] && [ -f .claude/scripts/aes-board.mjs ] || exit 0
+command -v node >/dev/null 2>&1 || exit 0
+node .claude/scripts/aes-board.mjs >/dev/null 2>&1 || true
+exit 0
+`;
+if (process.argv.includes('--install-hook') || process.argv.includes('--check-hook')) {
+  const git = (...a) => execFileSync('git', a, { encoding: 'utf8' }).trim();
+  const hooksDir = resolve(git('rev-parse', '--git-path', 'hooks'));
+  let missing = 0;
+  for (const name of ['post-merge', 'post-rewrite']) {
+    const f = join(hooksDir, name);
+    const cur = existsSync(f) ? readFileSync(f, 'utf8') : '';
+    if (cur.includes(HOOK_MARK)) continue;
+    if (process.argv.includes('--check-hook')) { missing++; continue; }
+    if (cur && !cur.startsWith('#!/bin/sh') && !cur.startsWith('#!/usr/bin/env')) { console.error(`aes-board: ${f} existe y no es un script de shell: no lo toco.`); missing++; continue; }
+    // Si ya hay un hook propio, se añade al final sin quitarle nada.
+    const body = cur ? `${cur.replace(/\n?exit 0\s*$/, '')}\n${HOOK.split('\n').slice(1).join('\n')}` : HOOK;
+    mkdirSync(hooksDir, { recursive: true }); writeFileSync(f, body); try { chmodSync(f, 0o755); } catch {}
+    console.log(`aes-board: hook ${name} instalado.`);
+  }
+  process.exit(missing ? 1 : 0);
+}
 
 const args = process.argv.slice(2);
 const json = args.includes('--json');
@@ -128,4 +163,4 @@ const html = `<!DOCTYPE html>
 const target = out ?? '.aes/board.html';
 mkdirSync(dirname(resolve(target)), { recursive: true });
 writeFileSync(target, html);
-console.log(target);
+console.log(`Tablero: ${target} (${pathToFileURL(resolve(target)).href})`);

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AES 1.5.0 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
+# AES 1.5.1 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
 #
 # Comprueba de una vez todo lo que un rol necesita para trabajar en esta máquina, para pedirle al
 # humano lo que falte en una sola ronda y no descubrirlo tarea a tarea:
@@ -85,6 +85,11 @@ if section aes "Herramientas de AES"; then
   for c in git jq node npm gh openssl; do
     if command -v "$c" >/dev/null; then ok "$c"; else bad "falta $c en el PATH"; fi
   done
+  if command -v node >/dev/null && node .claude/scripts/aes-board.mjs --check-hook >/dev/null 2>&1; then
+    ok "tablero del backlog: se regenera solo tras cada pull (.aes/board.html)"
+  else
+    warn "el tablero no se regenera solo en esta máquina (los hooks de git no se versionan): node .claude/scripts/aes-board.mjs --install-hook"
+  fi
 fi
 
 # --- 2. Identidad ----------------------------------------------------------------------------------

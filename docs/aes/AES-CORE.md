@@ -1,4 +1,4 @@
-# Agentic Engineering Standard — AES Core 1.4.0
+# Agentic Engineering Standard — AES Core 1.5.1
 
 <!-- Archivo generado por scripts/build-core.sh a partir de standard/. No editar a mano. -->
 
@@ -420,9 +420,19 @@ El perfil puede endurecer la compuerta (por ejemplo, un límite menor de defecto
 
 ### 9.3 Qué es un defecto y qué no
 
-- Un hallazgo sobre **lo que añade la tarea en curso** no es un defecto: es un ciclo `FAIL` de esa tarea, que se corrige antes de integrar (04 §9).
+- Un `FAIL` del verificador, o un check rojo de la CI, es un ciclo `FAIL` de la tarea (04 §9).
+- Tras un `PASS`, cada hallazgo trae **origen** (de la tarea o preexistente) y **tipo** (defecto: incumple algo escrito; hueco de la especificación: nada escrito lo decide). La regla por defecto:
+
+  | Hallazgo tras un PASS | Qué se hace |
+  |---|---|
+  | De la tarea, defecto, severidad **Media o mayor** | Ciclo `FAIL` de la tarea, antes de integrar |
+  | De la tarea, defecto **Menor** | Defecto del backlog (`BUG-NNN`, de la historia en curso). El humano puede pedir corregirlo ahora como ciclo `FAIL` |
+  | De la tarea, **hueco de la especificación** | No es un ciclo. Se corrige la especificación: la nota en el cierre y el catálogo de diseño. Si el comportamiento debe cambiar, es un defecto Menor del backlog o un criterio de una historia posterior |
+  | Preexistente | Defecto del backlog con severidad |
+
+- Un hallazgo Menor que aparece **en una reverificación**, fuera de lo que cambió el último ciclo, va al backlog: no abre otro ciclo. Así una tarea no gasta sus 3 ciclos puliendo detalles mientras la compuerta de estabilización (§9.2) ya limita cuántos Menores se acumulan.
 - Un hallazgo sobre comportamiento **ya aceptado o preexistente** es un defecto: se registra con ID, severidad, historia de origen, reproducción y criterio, aunque se encuentre durante otra historia.
-- El responsable humano puede fijar en el perfil una **regla permanente** para clasificar los hallazgos tras un `PASS` del verificador (por ejemplo, «lo que añade la tarea se corrige; lo demás va al backlog»). El orquestador la aplica, registra cada clasificación como decisión y se la muestra al humano, que puede cambiarla antes de integrar.
+- El responsable humano puede reemplazar esta regla en el perfil por una **regla permanente** propia. El orquestador la aplica, registra cada clasificación como decisión y se la muestra al humano, que puede cambiarla antes de integrar.
 
 ### 9.4 Lote de estabilización
 
@@ -1243,7 +1253,20 @@ Un rol MAY correr en un harness distinto al del orquestador (por ejemplo, el orq
 4. **L3 sin cambios:** la CI y la compuerta de fin de rol (servidores, guardián, validaciones) se aplican igual, porque no dependen del harness.
 5. **Sin credenciales de publicación** en el entorno del rol: publica el orquestador (§10).
 6. **Costo por delegación:** cada ejecución registra modelo, tokens (entrada, salida, razonamiento, caché) y costo estimado con el precio de lista del proveedor, incluidos los recargos por horario, aunque el modelo se use gratis. La retrospectiva del elemento resume el costo por rol (09 §6).
-7. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
+7. **Versión probada y entorno comprobado:** el perfil registra con qué versiones del otro harness se probó la delegación, y antes de delegar se comprueba que el harness acepta lo que la delegación usa y que el modelo responde. Un cambio de versión del harness no debe descubrirse como un rol que no se ejecutó.
+8. **Plan del proveedor adecuado a la tarea:** un plan gratuito o con límite de uso corto MUST NOT usarse para tareas que compilan o duran más que su ventana; un corte a mitad de tarea deja trabajo sin compuerta. La fila de costo se registra también cuando el proveedor falla.
+9. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
+
+### 12.1 Nivel de modelo por tarea
+
+El binding de un rol es un valor por defecto, no una obligación para todas sus tareas. Una tarea MAY pedir otro **nivel de modelo** (por ejemplo, «alto») o un binding concreto, cuando lo que pide supera lo que el modelo por defecto hace bien:
+- **contexto muy grande que hay que leer entero:** un esquema o una base de datos heredada, un módulo antiguo, un volcado de registros;
+- **razonamiento que cruza muchas piezas:** una migración de datos con reglas, un cambio de concurrencia, de seguridad o de un protocolo;
+- **fallos repetidos del nivel estándar** por defectos del código (no de la especificación): tras dos ciclos FAIL así, el orquestador MAY proponer el nivel alto para el siguiente.
+
+El orquestador propone el nivel en la especificación de la tarea, con el motivo, y el humano lo aprueba junto con las tareas. Sin motivo, una tarea usa el nivel estándar: el nivel alto cuesta más y gasta los límites del proveedor principal. El perfil define qué binding tiene cada nivel y para cada rol; el verificador de una tarea de nivel alto MAY subir también de nivel. Cuando el programador y el verificador quedan en la misma familia de modelos, el perfil lo anota como hueco del SHOULD de abajo.
+
+Si la tarea ve **datos reales** (una base de datos de producción o heredada, registros con datos personales), el nivel elegido MUST respetar el punto 9: si el proveedor de ese nivel retiene o entrena con lo que recibe, la tarea trabaja con el esquema y una muestra anonimizada, o se elige otro proveedor.
 
 El verificador SHOULD correr en una familia de modelos distinta a la del programador: un modelo que revisa su propio tipo de errores los detecta peor.
 
