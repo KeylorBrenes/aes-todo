@@ -4,11 +4,17 @@ import { texts } from './i18n/es';
 
 type ConnectionState = 'checking' | 'ok' | 'error';
 
+const statusText: Record<ConnectionState, string> = {
+  checking: texts.checking,
+  ok: texts.connected,
+  error: '',
+};
+
 export function App() {
   const [state, setState] = useState<ConnectionState>('checking');
   const [attempt, setAttempt] = useState(0);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
-  const connectedStatusRef = useRef<HTMLParagraphElement>(null);
+  const statusRef = useRef<HTMLParagraphElement>(null);
   const retryInProgress = useRef(false);
 
   useEffect(() => {
@@ -35,7 +41,7 @@ export function App() {
       retryButtonRef.current?.focus();
     } else if (state === 'ok') {
       retryInProgress.current = false;
-      connectedStatusRef.current?.focus();
+      statusRef.current?.focus();
     }
   }, [state]);
 
@@ -50,17 +56,9 @@ export function App() {
       <section className="card">
         <h1 className="title">{texts.appName}</h1>
 
-        {state === 'ok' && (
-          <p className="status" role="status" ref={connectedStatusRef} tabIndex={-1}>
-            {texts.connected}
-          </p>
-        )}
-
-        {state === 'checking' && (
-          <p className="status" role="status">
-            {texts.checking}
-          </p>
-        )}
+        <p className="status" role="status" ref={statusRef} tabIndex={-1}>
+          {statusText[state]}
+        </p>
 
         {state === 'error' && (
           <div className="notice">
