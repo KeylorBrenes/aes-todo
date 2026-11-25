@@ -22,6 +22,12 @@
 
 [Cada tarea tiene su archivo `TASK-NNN.md` con la nota de diseño (`design-note.md`), su `.scope` y, salvo la última, su `.criteria`.]
 
+**Criterios que verifican el harness** (la CI, `validate.sh`, `aes.env`, un workflow): sus cambios no van en el PR `qa/<ID>`, porque harían pasar su propio comando de verificación y la CI rechazaría el RED. Van en un PR `spec/<ID>-ci` **entre** `qa/<ID>` y la primera tarea, que prepara el orquestador (rutas protegidas). Indícalo aquí:
+
+| Criterio | Archivos del harness que cambia | PR |
+|---|---|---|
+| | | `spec/<ID>-ci` |
+
 ## Riesgos técnicos y preguntas abiertas
 
 ## Para consolidar en el cierre

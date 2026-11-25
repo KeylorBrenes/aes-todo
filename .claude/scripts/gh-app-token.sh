@@ -12,7 +12,10 @@
 # Desde cualquier otra terminal, si no están definidas, se leen de ese mismo archivo.
 #
 # Uso: token=$(bash .claude/scripts/gh-app-token.sh)
+#      bash .claude/scripts/gh-app-token.sh --permissions   permisos del token (JSON), p. ej. para ver
+#                                                        si la app tiene "workflows": "write"
 set -euo pipefail
+want_perms=0; [[ "${1:-}" == --permissions ]] && want_perms=1
 
 if [[ -z "${AES_APP_ID:-}" || -z "${AES_APP_INSTALLATION_ID:-}" || -z "${AES_APP_PRIVATE_KEY:-}" ]]; then
   settings="$(cd "$(dirname "$0")/.." && pwd)/settings.local.json"
@@ -44,8 +47,9 @@ if [[ -s "$cache" ]]; then
   if [[ -n "$expires_at" ]]; then
     # jq en lugar de date -d: funciona igual en Linux, macOS y Git Bash.
     exp_epoch=$(jq -rn --arg t "$expires_at" '$t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601' 2>/dev/null || echo 0)
-    if (( exp_epoch - now > 300 )); then
-      jq -r '.token' "$cache"
+    # Con --permissions, una caché anterior a 1.4.1 (sin permisos) no sirve: se renueva.
+    if (( exp_epoch - now > 300 )) && { (( ! want_perms )) || jq -e '.permissions' "$cache" >/dev/null 2>&1; }; then
+      if (( want_perms )); then jq '.permissions' "$cache"; else jq -r '.token' "$cache"; fi
       exit 0
     fi
   fi
@@ -72,5 +76,5 @@ if [[ -z "$token" ]]; then
 fi
 
 umask 077
-jq '{token, expires_at}' <<< "$response" > "$cache"
-printf '%s\n' "$token"
+jq '{token, expires_at, permissions}' <<< "$response" > "$cache"
+if (( want_perms )); then jq '.permissions' <<< "$response"; else printf '%s\n' "$token"; fi

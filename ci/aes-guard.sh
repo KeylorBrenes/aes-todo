@@ -28,6 +28,14 @@ DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requi
 # Marcadores de omisión, silenciado o errores tragados.
 MARKERS_RE='\.skip\(|\bxit\(|\bxdescribe\(|@Disabled|@Ignore|#\[ignore\]|pytest\.mark\.skip|Skip *= *"|eslint-disable|@ts-ignore|@ts-expect-error|#[[:space:]]*type:[[:space:]]*ignore|#pragma warning disable|noqa|nosemgrep|NOSONAR|\bTODO\b|\bFIXME\b|\bHACK\b|catch *(\([^)]*\))? *\{ *\}|except[^:]*: *pass'
 
+# Modo auxiliar de la CI (1.4.1): ¿cambió algún archivo de dependencias entre dos commits? Imprime los
+# que cambiaron (vacío = ninguno). Lo usa el workflow para conservar aes:deps-approved en un commit
+# nuevo que no toca dependencias: la aprobación sigue valiendo para lo que el humano revisó.
+if [[ "${1:-}" == --deps-changed ]]; then
+  git diff --name-only "${2:?--deps-changed <desde> <hasta>}" "${3:?--deps-changed <desde> <hasta>}" | grep -E "$DEPS_RE" || true
+  exit 0
+fi
+
 fail=0
 report() { printf '%s\n' "$*"; }
 

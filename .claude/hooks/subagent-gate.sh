@@ -36,20 +36,6 @@ if [[ -z "${AES_PORTS:-}" && -f .claude/aes.env ]]; then
   AES_PORTS=$(sed -n 's/^AES_PORTS=//p' .claude/aes.env | tr -d '"\r' | head -n1)
 fi
 AES_PORTS="${AES_PORTS:-}"
-port_listening() {
-  local port="$1" hex
-  if [[ -r /proc/net/tcp ]]; then
-    local files=(/proc/net/tcp)
-    [[ -r /proc/net/tcp6 ]] && files+=(/proc/net/tcp6)
-    hex=$(printf '%04X' "$port")
-    awk -v h=":${hex}" '$4 == "0A" && substr($2, length($2) - 4) == h { found = 1 } END { exit !found }' \
-      "${files[@]}" 2>/dev/null
-  elif command -v netstat >/dev/null 2>&1; then
-    { netstat -ano 2>/dev/null || netstat -an 2>/dev/null; } | grep -iE "[:.]${port}[[:space:]].*(LISTENING|ESCUCHANDO|LISTEN)" >/dev/null
-  else
-    return 1
-  fi
-}
 listening=""
 for port in $AES_PORTS; do
   port_listening "$port" && listening+=" $port"

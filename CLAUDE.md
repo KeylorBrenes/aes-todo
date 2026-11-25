@@ -1,6 +1,6 @@
 # [Proyecto] — instrucciones del proyecto
 
-Proyecto gestionado con **AES 1.4.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Proyecto gestionado con **AES 1.4.1** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
 ## Al empezar cada sesión
 - **Si no existe `docs/backlog.md`, el proyecto todavía no tiene planeamiento:** antes de cualquier otra cosa, usa la skill `aes-inception` y pregúntale al humano por la idea (por bloques de preguntas concretas). No escribas código ni crees historias sin eso.
