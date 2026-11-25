@@ -4,6 +4,8 @@
 - **Track:** T0 / T1 / T2 / T3
 - **Estado:** Ready / In Progress / In Review / Blocked / Done
 - **Agente asignado:** programador / mecánico
+- **Nivel de modelo:** estándar / alto — [motivo] / [binding concreto, p. ej. `opencode:deepseek/deepseek-flash` o `claude:opus`] (06 §12.1)
+- **Datos que ve el rol:** solo código / [datos reales: cuáles, y si el proveedor del nivel elegido puede recibirlos] (06 §12)
 - **Riesgo:** Low / Medium / High / Critical
 - **Ciclos FAIL acumulados:** 0 / 3 (circuit breaker al llegar a 3)
 

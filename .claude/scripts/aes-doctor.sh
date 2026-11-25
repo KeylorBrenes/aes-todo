@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AES 1.4.1 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
+# AES 1.5.0 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
 #
 # Comprueba de una vez todo lo que un rol necesita para trabajar en esta máquina, para pedirle al
 # humano lo que falte en una sola ronda y no descubrirlo tarea a tarea:
@@ -108,8 +108,13 @@ fi
 
 # --- 3. OpenCode -----------------------------------------------------------------------------------
 models=()
-for r in QA PROGRAMMER MECHANIC; do
-  v="AES_BIND_$r"; b=${!v:-claude}
+# Todos los bindings: los de cada rol y los de cada nivel de modelo (AES_BIND_<ROL>_<NIVEL>).
+for v in $(compgen -v AES_BIND_); do
+  b=${!v}
+  case "$b" in
+    claude|claude:sonnet|claude:opus|claude:haiku|opencode:*/*) ;;
+    *) bad "$v=\"$b\" no es un binding válido (claude, claude:<sonnet|opus|haiku> u opencode:<proveedor>/<modelo>)" ;;
+  esac
   if [[ "$b" == opencode:* ]]; then
     m=${b#opencode:}; seen=0
     for x in "${models[@]:-}"; do [[ "$x" == "$m" ]] && seen=1; done

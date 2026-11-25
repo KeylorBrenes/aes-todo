@@ -20,6 +20,14 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 
 Ejemplo de la implementación de referencia: orquestador en Claude Code (Opus); QA, programador y mecánico en OpenCode con `deepseek/deepseek-flash`, delegados con `.claude/scripts/aes-oc.sh` (binding en `.claude/aes.env`); verificador como subagente de Claude Code (Sonnet).
 
+### Niveles de modelo por tarea (06 §12.1)
+| Nivel | Cuándo se usa | Programador | Verificador | Proveedor y condiciones de datos |
+|---|---|---|---|---|
+| estándar | Por defecto | [binding] | [binding] | |
+| alto | [contexto muy grande, razonamiento que cruza muchas piezas, dos ciclos FAIL por defectos del código] | [binding] | [binding] | |
+
+[Si en un nivel programador y verificador quedan en la misma familia de modelos, anotarlo aquí como hueco.]
+
 Huecos de control de los roles en otro harness (06 §12, punto 3):
 
 ## Producto y contexto
