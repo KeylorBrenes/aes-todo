@@ -64,7 +64,10 @@ case "$cmd" in
     fi
     git -C "$root" worktree remove "$path"
     # En Windows, la carpeta vacía puede quedar un momento bloqueada (antivirus, indexador).
-    for _ in 1 2 3; do [[ -d "$path" ]] || break; rmdir "$path" 2>/dev/null || sleep 1; done
+    for _ in 1 2 3; do [[ -d "$path" ]] || break; rm -rf "${path:?}" 2>/dev/null || sleep 1; done
+    if [[ -d "$path" ]]; then
+      echo "AES: git ya cerró el worktree, pero la carpeta $path sigue ahí (en Windows, porque un proceso o una terminal tiene su directorio actual dentro). Sal de ella y bórrala: rm -rf \"$path\"" >&2
+    fi
     ;;
   path)
     wt_path "$branch"; echo
