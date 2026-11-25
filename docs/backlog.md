@@ -47,6 +47,7 @@ Solo el release en curso está comprometido; los siguientes son una previsión (
 | BUG-001 | Defecto | — | El texto «Conectado con el servidor» enfocado muestra un anillo gris en vez del de DESIGN.md | EN-001 | 1 | P2 | REL-001 | Menor | Draft |
 | BUG-002 | Defecto | — | Tras reintentar con el ratón, el texto «Conectado con el servidor» queda con recuadro de foco | EN-001 | 1 | P2 | REL-001 | Menor | Draft |
 | BUG-003 | Defecto | — | Con el aviso visible la tarjeta deja un hueco, y mientras dice «Conectando…» el foco queda fuera de los controles | EN-001 | 1 | P2 | REL-001 | Menor | Draft |
+| ST-001 | Lote | — | Lote de estabilización tras EN-001: BUG-001, BUG-002 y BUG-003 | EN-001 | 2 | P1 | REL-001 | — | Ready |
 
 ## Epics
 | Epic | Lo que el usuario hace |
