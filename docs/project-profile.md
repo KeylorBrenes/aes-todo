@@ -13,9 +13,9 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 | Rol | Harness | Modelo | Invocación | Identidad con la que publica | Proveedor y condiciones de datos (06 §12) |
 |---|---|---|---|---|---|
 | Orquestador (modelo más capaz disponible, 06 §11) | Claude Code | Claude Opus 5.5 | Sesión principal | GitHub App de los agentes (`AES_IDENTITY=app`) | Anthropic |
-| QA | OpenCode | `opencode/deepseek-v4.1-flash-free` | `.claude/scripts/aes-oc.sh` (`AES_BIND_QA`) | GitHub App de los agentes | OpenCode (promoción gratuita; sin retención ni entrenamiento según su política) |
-| Programador | OpenCode | `opencode/deepseek-v4.1-flash-free` | `.claude/scripts/aes-oc.sh` (`AES_BIND_PROGRAMMER`) | GitHub App de los agentes | Ídem |
-| Mecánico (opcional) | OpenCode | `opencode/deepseek-v4.1-flash-free` | `.claude/scripts/aes-oc.sh` (`AES_BIND_MECHANIC`) | GitHub App de los agentes | Ídem |
+| QA | OpenCode | `deepseek/deepseek-flash` | `.claude/scripts/aes-oc.sh` (`AES_BIND_QA`) | GitHub App de los agentes | DeepSeek (API de pago, saldo prepago del responsable del producto; condiciones de datos de DeepSeek). Proveedor `deepseek` en la configuración global de OpenCode, fuera del repo |
+| Programador | OpenCode | `deepseek/deepseek-flash` | `.claude/scripts/aes-oc.sh` (`AES_BIND_PROGRAMMER`) | GitHub App de los agentes | Ídem |
+| Mecánico (opcional) | OpenCode | `deepseek/deepseek-flash` | `.claude/scripts/aes-oc.sh` (`AES_BIND_MECHANIC`) | GitHub App de los agentes | Ídem |
 | Verificador (otra familia de modelos que el programador, 06 §12) | Claude Code (subagente) | Sonnet (`.claude/agents/verifier.md`) | Agent `verifier` | GitHub App de los agentes | Anthropic |
 
 Huecos de control de los roles en otro harness (06 §12, punto 3): los hooks de `.claude/hooks/` no corren dentro de OpenCode. Para esos roles, la superficie de cambio y las rutas protegidas las controlan el guardián de la CI (`ci/aes-guard.sh`, L3) y la configuración de permisos de `opencode.json`.
