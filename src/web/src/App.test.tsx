@@ -60,6 +60,33 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: texts.retry })).toBeVisible();
   });
 
+  it('avisa cuando el servidor responde 200 con un estado distinto de «ok»', async () => {
+    stubFetch(() => Promise.resolve(jsonResponse({ status: 'degraded' })));
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(texts.disconnected);
+    expect(screen.getByRole('button', { name: texts.retry })).toBeVisible();
+    expect(screen.queryByText(texts.connected)).not.toBeInTheDocument();
+  });
+
+  it('avisa cuando el servidor responde 200 con un cuerpo que no es JSON', async () => {
+    stubFetch(() =>
+      Promise.resolve(
+        new Response('<html>ok</html>', {
+          status: 200,
+          headers: { 'Content-Type': 'text/html' },
+        }),
+      ),
+    );
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(texts.disconnected);
+    expect(screen.getByRole('button', { name: texts.retry })).toBeVisible();
+    expect(screen.queryByText(texts.connected)).not.toBeInTheDocument();
+  });
+
   it('devuelve el foco a «Reintentar» cuando el reintento vuelve a fallar', async () => {
     stubFetch(() => Promise.reject(new TypeError('Failed to fetch')));
     const user = userEvent.setup();
