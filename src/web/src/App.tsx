@@ -47,6 +47,7 @@ export function App() {
 
   function retry() {
     retryInProgress.current = true;
+    statusRef.current?.focus();
     setState('checking');
     setAttempt((value) => value + 1);
   }
@@ -56,7 +57,12 @@ export function App() {
       <section className="card">
         <h1 className="title">{texts.appName}</h1>
 
-        <p className="status" role="status" ref={statusRef} tabIndex={-1}>
+        <p
+          className={statusText[state] === '' ? 'status status-empty' : 'status'}
+          role="status"
+          ref={statusRef}
+          tabIndex={-1}
+        >
           {statusText[state]}
         </p>
 
