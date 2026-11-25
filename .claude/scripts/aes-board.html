@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Backlog</title>
+<!-- Plantilla del tablero de AES (02 §11). La rellena .claude/scripts/aes-board.mjs con los datos de
+     docs/backlog.md; el resultado (.aes/board.html) es un archivo autocontenido, sin red. -->
+<style>
+  :root {
+    --font: "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
+    --shell: #1b1f24; --shell-2: #262b31; --shell-ink: #f3f4f2; --shell-muted: #b9c0c7;
+    --sign: #ffcc00; --sign-ink: #16191c; --sign-2: #ffe27a;
+    --ground: #edeff1; --surface: #ffffff; --surface-2: #f6f7f8; --line: #d3d8dd; --line-2: #e3e6e9;
+    --ink: #16191c; --muted: #545c65; --faint: #6b737c;
+    --go: #0d7a49; --go-bg: #e2f3ea; --wait: #8f5200; --wait-bg: #fbefd9; --stop: #b3261e; --stop-bg: #fbe5e3;
+    --info: #1d5ea8; --info-bg: #e3edf8; --done: #4f5a64; --done-bg: #eceff1;
+    --focus: #1d5ea8; --hl: #fff4c2;
+    --r: 6px; --shadow: 0 1px 2px rgb(16 20 24 / .06), 0 2px 6px rgb(16 20 24 / .05);
+    --shadow-up: 0 6px 24px rgb(16 20 24 / .16), 0 2px 6px rgb(16 20 24 / .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --shell: #0b0d10; --shell-2: #171b20; --shell-muted: #9aa3ac;
+      --ground: #111418; --surface: #191d22; --surface-2: #1e2328; --line: #2c3239; --line-2: #252a30;
+      --ink: #e8eaec; --muted: #a7afb7; --faint: #8b949d;
+      --go: #49c487; --go-bg: #123224; --wait: #f2ae4a; --wait-bg: #3a2a10; --stop: #ff7a6e; --stop-bg: #3d1916;
+      --info: #78acf2; --info-bg: #15263b; --done: #a6b0b9; --done-bg: #23282e;
+      --focus: #78acf2; --hl: #3a3412;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4); --shadow-up: 0 8px 28px rgb(0 0 0 / .55);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { font: 15px/1.45 var(--font); color: var(--ink); background: var(--ground); -webkit-text-size-adjust: 100%; scrollbar-color: var(--line) transparent; }
+  body { margin: 0; min-height: 100vh; }
+  ::selection { background: var(--sign); color: var(--sign-ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  a { color: var(--info); text-underline-offset: .18em; }
+  button, input, select { font: inherit; color: inherit; }
+  .num, td.n, .pts { font-variant-numeric: tabular-nums; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg.i { width: 1.1em; height: 1.1em; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.18em; }
+
+  /* Cabecera: el «poste» de señalética */
+  .shell { background: var(--shell); color: var(--shell-ink); display: flex; align-items: center; gap: 28px; padding: 0 24px; min-height: 56px; position: sticky; top: 0; z-index: 5; }
+  .brand { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; }
+  .brand b { font-size: 1.07rem; letter-spacing: -.01em; }
+  .brand span { color: var(--shell-muted); font-size: .87rem; }
+  .tabs { display: flex; gap: 2px; align-self: stretch; }
+  .tabs button { background: none; border: 0; padding: 0 14px; color: var(--shell-muted); cursor: pointer; border-bottom: 3px solid transparent; border-top: 3px solid transparent; font-weight: 600; font-size: .93rem; }
+  .tabs button:hover { color: var(--shell-ink); }
+  .tabs button[aria-selected="true"] { color: var(--shell-ink); border-bottom-color: var(--sign); }
+  .tabs button:focus-visible { outline-color: var(--sign); outline-offset: -4px; }
+  .stamp { margin-left: auto; color: var(--shell-muted); font-size: .8rem; text-align: right; }
+
+  main { padding: 20px 24px 40px; }
+  [role="tabpanel"][hidden] { display: none; }
+
+  /* El letrero «Siguiente» */
+  .wayfind { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; margin-bottom: 18px; }
+  .sign { background: var(--sign); color: var(--sign-ink); border-radius: var(--r); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 20px; padding: 18px 22px 18px 18px; box-shadow: var(--shadow); }
+  .sign .arrow { grid-row: span 3; width: 64px; height: 64px; border-radius: 8px; background: var(--sign-ink); color: var(--sign); display: grid; place-items: center; }
+  .sign .arrow svg { width: 40px; height: 40px; stroke-width: 2.6; }
+  .sign h1 { margin: 0; font-size: 1.6rem; line-height: 1.15; letter-spacing: -.015em; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+  .sign h1 .lead { font-weight: 800; }
+  .sign h1 .id { font-weight: 800; padding: 0 8px; background: var(--sign-ink); color: var(--sign); border-radius: 4px; font-size: 1.15rem; line-height: 1.6; }
+  .sign h1 .t { font-weight: 600; }
+  .sign p { margin: 2px 0 0; max-width: 78ch; color: #3a3305; }
+  .sign .say { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .say code { font: .92rem/1.3 var(--mono); background: rgb(22 25 28 / .09); border: 1px solid rgb(22 25 28 / .22); border-radius: 4px; padding: 6px 10px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 5px 11px; cursor: pointer; font-weight: 600; font-size: .87rem; transition: background-color .15s, border-color .15s; }
+  .btn:hover { background: var(--surface-2); border-color: var(--faint); }
+  .btn:active { transform: translateY(1px); }
+  .sign .btn { background: var(--sign-ink); color: var(--sign); border-color: var(--sign-ink); }
+  .sign .btn:hover { background: #2d3238; }
+  .sign .btn:focus-visible { outline-color: var(--sign-ink); }
+  .sign.idle { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+  .sign.idle .arrow { background: var(--done-bg); color: var(--done); }
+  .sign.idle p { color: var(--muted); }
+  .side { background: var(--shell-2); color: var(--shell-ink); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .side h2 { margin: 0; font-size: .87rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .gate-state { font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .gate-state.open { color: #63d69c; } .gate-state.closed { color: #ff8f84; }
+  .meter { display: flex; gap: 4px; margin-top: 6px; }
+  .meter i { flex: 1; height: 8px; border-radius: 2px; background: #4a525b; }
+  .meter i.on { background: var(--sign); } .meter i.over { background: #ff8f84; }
+  .side small { color: var(--shell-muted); font-size: .8rem; display: block; margin-top: 4px; }
+  .side .alts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip-btn { border: 1px solid #4a525b; background: transparent; color: var(--shell-ink); border-radius: 999px; padding: 2px 10px; font-size: .8rem; cursor: pointer; font-weight: 600; }
+  .chip-btn:hover { border-color: var(--sign); color: var(--sign); }
+
+  /* Filtros */
+  .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; margin-bottom: 14px; }
+  .field { display: flex; flex-direction: column; gap: 3px; font-size: .8rem; color: var(--muted); font-weight: 600; }
+  .field input[type="search"], .field select { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 6px 9px; min-width: 150px; color: var(--ink); font-weight: 400; font-size: .93rem; }
+  .field input[type="search"] { min-width: 240px; }
+  .check { display: flex; align-items: center; gap: 7px; font-size: .87rem; color: var(--ink); padding-bottom: 6px; cursor: pointer; }
+  .check input { accent-color: var(--go); width: 16px; height: 16px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; background: var(--surface); }
+  .seg button { border: 0; background: none; padding: 6px 11px; cursor: pointer; font-size: .87rem; color: var(--muted); font-weight: 600; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--shell); color: var(--shell-ink); }
+  .count { margin-left: auto; color: var(--muted); font-size: .87rem; padding-bottom: 6px; }
+
+  /* Tablero */
+  .board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; align-items: flex-start; }
+  .lane { flex: 1 1 260px; min-width: 260px; max-width: 340px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r); padding: 10px; }
+  .lane.wide { flex: 3 1 560px; max-width: none; }
+  .lane.wide .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0 8px; align-items: start; }
+  .lane h3 { margin: 2px 4px 10px; font-size: .87rem; display: flex; align-items: center; gap: 8px; }
+  .lane h3 .n { margin-left: auto; color: var(--muted); font-weight: 600; }
+  .lane .empty { color: var(--faint); font-size: .87rem; padding: 6px 4px 2px; }
+  .card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 11px; margin: 0 0 8px; cursor: pointer; box-shadow: var(--shadow); transition: border-color .15s, background-color .15s, box-shadow .15s; }
+  .card:hover { border-color: var(--faint); }
+  .card .top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card .cid { font-weight: 800; letter-spacing: -.005em; }
+  .card .ttl { margin: 6px 0 8px; font-size: .93rem; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: .8rem; color: var(--muted); }
+  .card.is-next { border-color: var(--sign-ink); box-shadow: 0 0 0 3px var(--sign), var(--shadow); }
+  .card.dim { opacity: .38; }
+  .card.sel { border-color: var(--info); box-shadow: 0 0 0 2px var(--info), var(--shadow); }
+  .card.req, .card.blk { background: var(--hl); border-color: var(--wait); }
+  .card .rel-tag { display: none; font-size: .73rem; font-weight: 700; color: var(--wait); }
+  .card.req .rel-tag.r, .card.blk .rel-tag.b { display: inline; }
+  .tag { font-size: .73rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--surface-2); }
+  .sev { font-size: .73rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+  .sev-critica { background: var(--stop); color: #fff; } .sev-alta { background: var(--stop-bg); color: var(--stop); }
+  .sev-media { background: var(--wait-bg); color: var(--wait); } .sev-menor { background: var(--done-bg); color: var(--done); }
+  .ready { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .8rem; font-weight: 600; padding: 4px 7px; border-radius: 4px; }
+  .ready.go { color: var(--go); background: var(--go-bg); }
+  .ready.wait { color: var(--wait); background: var(--wait-bg); }
+  .ready.lock { color: var(--stop); background: var(--stop-bg); }
+  .ready.done { color: var(--done); background: var(--done-bg); }
+  .ready.active { color: var(--info); background: var(--info-bg); }
+  .nores { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r); padding: 26px; text-align: center; color: var(--muted); }
+
+  /* Panel de detalle (no modal: el tablero sigue usable) */
+  .detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100vw); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-up); z-index: 10; transform: translateX(102%); transition: transform .22s cubic-bezier(.16, 1, .3, 1); display: flex; flex-direction: column; visibility: hidden; }
+  .detail.open { transform: none; visibility: visible; }
+  .detail header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line-2); display: flex; gap: 10px; align-items: flex-start; }
+  .detail header h2:focus { outline: none; }
+  .detail header h2 { margin: 0; font-size: 1.2rem; line-height: 1.25; flex: 1; }
+  .detail header h2 .cid { display: block; font-size: .87rem; color: var(--muted); margin-bottom: 2px; }
+  .x { border: 0; background: none; cursor: pointer; padding: 4px; border-radius: 4px; color: var(--muted); }
+  .x:hover { background: var(--surface-2); color: var(--ink); }
+  .detail .body { padding: 14px 18px 24px; overflow-y: auto; }
+  .detail h3 { font-size: .8rem; text-transform: none; color: var(--muted); margin: 18px 0 6px; font-weight: 700; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: .9rem; margin: 0; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; }
+  .route { list-style: none; margin: 0; padding: 0; }
+  .route li { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid var(--line-2); font-size: .9rem; }
+  .route li:last-child { border-bottom: 0; }
+  .route .tt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); }
+  .route button { white-space: nowrap; background: none; border: 0; padding: 0; color: var(--info); cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: .18em; }
+  .route .st { white-space: nowrap; font-size: .8rem; color: var(--muted); }
+  .notes { margin: 0; padding-left: 18px; font-size: .9rem; } .notes li { margin: 4px 0; }
+  .detail .say { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .detail .say code { background: none; border: 0; padding: 0; }
+  .links { display: flex; gap: 14px; flex-wrap: wrap; font-size: .9rem; }
+
+  /* Releases, métricas, guía */
+  .wrap { max-width: 1180px; }
+  h2.sec { font-size: 1.25rem; margin: 6px 0 4px; letter-spacing: -.01em; }
+  p.lede { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
+  .rel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .rel .h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .rel .h b { font-size: 1.1rem; } .rel .h .st { color: var(--muted); font-size: .87rem; }
+  .rel .h .pts { margin-left: auto; font-weight: 700; }
+  .rel p { margin: 4px 0 10px; max-width: 80ch; }
+  .bar { height: 10px; border-radius: 3px; background: var(--line-2); overflow: hidden; display: flex; }
+  .bar i { display: block; height: 100%; } .bar .d { background: var(--go); } .bar .a { background: var(--info); }
+  .rel .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .8rem; color: var(--muted); margin-top: 8px; }
+  .rel .ids { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .idbtn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 4px; padding: 2px 7px; font-size: .8rem; font-weight: 700; cursor: pointer; color: var(--ink); }
+  .idbtn.done { color: var(--done); text-decoration: line-through; text-decoration-color: var(--faint); }
+  .idbtn.go { border-color: var(--go); color: var(--go); }
+  table { border-collapse: collapse; width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; font-size: .9rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+  th { background: var(--surface-2); font-size: .8rem; color: var(--muted); font-weight: 700; white-space: nowrap; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  tfoot td { font-weight: 700; background: var(--surface-2); }
+  .guide { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+  .guide section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+  .guide h3 { margin: 0 0 8px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .guide dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: .9rem; }
+  .guide dt { font-weight: 800; white-space: nowrap; } .guide dd { margin: 0; color: var(--ink); }
+  .guide dd small { color: var(--muted); display: block; }
+  .guide code { font: .85rem var(--mono); }
+  .guide p { margin: 0 0 8px; font-size: .9rem; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .wayfind { grid-template-columns: 1fr; }
+    .shell { flex-wrap: wrap; gap: 8px 18px; padding: 8px 16px; } .stamp { display: none; }
+    main { padding: 16px; } .tabs button { padding: 8px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.8-1.2"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10.5 9l4.5 3-4.5 3z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3.5V8h4.5"/></symbol>
+</svg>
+<noscript><p style="padding:16px">Este tablero necesita JavaScript (sin red: todo está en el archivo). La fuente es <code>docs/backlog.md</code>.</p></noscript>
+
+<header class="shell">
+  <div class="brand"><b id="proj">Backlog</b><span>Backlog</span></div>
+  <nav class="tabs" role="tablist" aria-label="Vistas">
+    <button role="tab" id="t-board" aria-controls="p-board" aria-selected="true">Tablero</button>
+    <button role="tab" id="t-rel" aria-controls="p-rel" aria-selected="false" tabindex="-1">Releases</button>
+    <button role="tab" id="t-met" aria-controls="p-met" aria-selected="false" tabindex="-1">Métricas</button>
+    <button role="tab" id="t-guide" aria-controls="p-guide" aria-selected="false" tabindex="-1">Guía</button>
+  </nav>
+  <div class="stamp" id="stamp"></div>
+</header>
+
+<main>
+  <section role="tabpanel" id="p-board" aria-labelledby="t-board">
+    <div class="wayfind">
+      <div class="sign" id="sign"></div>
+      <aside class="side" id="side" aria-label="Compuerta y alternativas"></aside>
+    </div>
+    <div class="toolbar" role="search">
+      <label class="field">Buscar<input type="search" id="q" placeholder="ID, título o epic"></label>
+      <label class="field">Release<select id="f-rel"><option value="">Todos</option></select></label>
+      <label class="field">Epic<select id="f-epic"><option value="">Todos</option></select></label>
+      <label class="field">Tipo<select id="f-type"><option value="">Todos</option></select></label>
+      <label class="check"><input type="checkbox" id="f-ready"> Solo listas para empezar</label>
+      <div class="field">Agrupar por<div class="seg" id="group"><button type="button" aria-pressed="true" data-g="estado">Estado</button><button type="button" aria-pressed="false" data-g="epic">Epic</button><button type="button" aria-pressed="false" data-g="release">Release</button></div></div>
+      <div class="count num" id="count" aria-live="polite"></div>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+  <section role="tabpanel" id="p-rel" aria-labelledby="t-rel" hidden><div class="wrap" id="rel"></div></section>
+  <section role="tabpanel" id="p-met" aria-labelledby="t-met" hidden><div class="wrap" id="met"></div></section>
+  <section role="tabpanel" id="p-guide" aria-labelledby="t-guide" hidden><div class="wrap" id="guide"></div></section>
+</main>
+
+<aside class="detail" id="detail" aria-labelledby="d-title" tabindex="-1"></aside>
+
+<script>
+const D = /*__AES_DATA__*/null;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ico = (n) => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const byId = new Map(D.items.map((i) => [i.id, i]));
+const lc = (s) => String(s).toLowerCase();
+const sevK = (s) => lc(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const STATES = ['Draft', 'Ready', 'In Progress', 'In Review', 'Blocked', 'Ready for Acceptance', 'Accepted', 'Released', 'Deferred', 'Rejected'];
+const ES = { 'Draft': 'Borrador', 'Ready': 'Lista (Ready)', 'In Progress': 'En curso', 'In Review': 'En revisión', 'Blocked': 'Bloqueada', 'Ready for Acceptance': 'Lista para aceptar', 'Accepted': 'Aceptada', 'Released': 'Liberada', 'Deferred': 'Pospuesta', 'Rejected': 'Rechazada' };
+const ACTIVE = new Set(['in progress', 'in review', 'ready for acceptance', 'blocked']);
+const TYPES = { EN: 'Enabler', US: 'Historia', BUG: 'Defecto', ST: 'Lote de estabilización', SP: 'Spike', CH: 'Chore' };
+const base = D.base ? D.base.replace(/\/?$/, '/') : '../';
+
+// Estado de arranque de cada tarjeta, en el vocabulario de la señalética.
+function readiness(it) {
+  if (it.hecho) return { k: 'done', i: 'check', t: ES[it.estado] || it.estado };
+  if (lc(it.estado) === 'deferred' || lc(it.estado) === 'rejected') return { k: 'done', i: 'pause', t: ES[it.estado] };
+  if (ACTIVE.has(lc(it.estado))) return { k: 'active', i: 'play', t: ES[it.estado] || it.estado };
+  if (it.pendientes.length) return { k: 'wait', i: 'clock', t: `Espera ${it.pendientes.join(', ')}` };
+  if (it.frenadaPorCompuerta) return { k: 'lock', i: 'lock', t: 'Lista, pero la compuerta está cerrada' };
+  return { k: 'go', i: 'arrow', t: 'Lista para empezar' };
+}
+const sevChip = (it) => it.severidad ? `<span class="sev sev-${sevK(it.severidad)}">${esc(it.severidad)}</span>` : '';
+const typeLabel = (it) => it.tipo || TYPES[it.prefijo] || it.prefijo;
+
+// --- Cabecera y letrero ---------------------------------------------------------------------------
+$('#proj').textContent = D.project;
+document.title = `Backlog · ${D.project}`;
+const gen = new Date(D.generado);
+$('#stamp').innerHTML = `Generado ${esc(gen.toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' }))}<br>desde <code>${esc(D.fuente)}</code> · solo lectura`;
+
+function copy(text, btn) {
+  const done = () => { const o = btn.innerHTML; btn.innerHTML = `${ico('check')} Copiado`; setTimeout(() => { btn.innerHTML = o; }, 1600); };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done, () => fallback());
+  else fallback();
+  function fallback() { const t = document.createElement('textarea'); t.value = text; document.body.append(t); t.select(); try { document.execCommand('copy'); done(); } catch {} t.remove(); }
+}
+const sayBlock = (text) => `<div class="say"><code>${esc(text)}</code><button class="btn" type="button" data-copy="${esc(text)}">${ico('copy')} Copiar</button></div>`;
+
+(function sign() {
+  const s = $('#sign'); const n = D.siguiente && byId.get(D.siguiente);
+  if (!n) {
+    s.classList.add('idle');
+    const left = D.items.filter((i) => !i.hecho).length;
+    s.innerHTML = `<div class="arrow">${ico(left ? 'pause' : 'check')}</div>
+      <h1><span class="lead">${left ? 'Nada listo para empezar' : 'Backlog completo'}</span></h1>
+      <p>${left ? 'Todo lo pendiente espera a otro elemento o la compuerta lo frena. Revisa la columna Bloqueada o los defectos abiertos.' : 'Todos los elementos están aceptados o liberados.'}</p>`;
+    return;
+  }
+  const lead = ACTIVE.has(lc(n.estado)) ? 'En curso' : 'Siguiente';
+  s.innerHTML = `<div class="arrow">${ico('arrow')}</div>
+    <h1><span class="lead">${lead}</span><span class="id">${esc(n.id)}</span><span class="t">${esc(n.titulo)}</span></h1>
+    <p>${esc(D.motivo)} ${n.puntos ? `${esc(n.puntos)} puntos.` : ''} <a href="#" data-open="${esc(n.id)}" style="color:inherit">Ver detalle</a></p>
+    ${sayBlock(D.frase)}`;
+})();
+
+(function side() {
+  const g = D.gate; const total = Math.max(g.limite, g.menores.length);
+  const marks = Array.from({ length: total }, (_, i) => `<i class="${i < g.menores.length ? (i >= g.limite ? 'over' : 'on') : ''}"></i>`).join('');
+  const grave = g.criticas.length + g.graves.length;
+  const alts = D.alternativas.map((id) => `<button class="chip-btn" type="button" data-open="${esc(id)}">${esc(id)}</button>`).join('');
+  const activos = D.items.filter((i) => ACTIVE.has(lc(i.estado)));
+  $('#side').innerHTML = `
+    <div><h2>${ico(g.abierta ? 'unlock' : 'lock')} Compuerta de estabilización</h2>
+      <div class="gate-state ${g.abierta ? 'open' : 'closed'}">${g.abierta ? 'Abierta' : 'Cerrada'}</div>
+      <div class="meter" role="img" aria-label="${g.menores.length} defectos Menores abiertos de un límite de ${g.limite}">${marks}</div>
+      <small class="num">${g.menores.length} de ${g.limite} Menores abiertos${grave ? ` · ${grave} Críticos, Altos o Medios: la cierran` : ''}${g.menores.length ? ` (${esc(g.menores.join(', '))})` : ''}</small></div>
+    <div><h2>${ico('arrow')} También listas para empezar</h2>
+      ${alts ? `<div class="alts">${alts}</div>` : '<small>Ninguna otra por ahora.</small>'}</div>
+    ${activos.length ? `<div><h2>${ico('play')} En curso</h2><div class="alts">${activos.map((i) => `<button class="chip-btn" type="button" data-open="${esc(i.id)}">${esc(i.id)}</button>`).join('')}</div></div>` : ''}`;
+})();
+
+// --- Filtros y tablero ----------------------------------------------------------------------------
+const uniq = (a) => [...new Set(a.filter(Boolean))];
+const fill = (sel, vals, label = (v) => v) => { for (const v of vals) sel.append(new Option(label(v), v)); };
+fill($('#f-rel'), D.releases.map((r) => r.id));
+fill($('#f-epic'), uniq([...D.epics.map((e) => e.id), ...D.items.map((i) => i.epic)]));
+fill($('#f-type'), uniq(D.items.map((i) => i.prefijo)), (p) => `${p} · ${TYPES[p] || p}`);
+const state = { q: '', rel: '', epic: '', type: '', ready: false, group: 'estado', focus: null };
+try { Object.assign(state, JSON.parse(localStorage.getItem('aes-board') || '{}'), { focus: null }); } catch {}
+$('#q').value = state.q; $('#f-rel').value = state.rel; $('#f-epic').value = state.epic; $('#f-type').value = state.type; $('#f-ready').checked = state.ready;
+const save = () => { try { localStorage.setItem('aes-board', JSON.stringify({ ...state, focus: null })); } catch {} };
+
+function visible(it) {
+  if (state.rel && it.release !== state.rel) return false;
+  if (state.epic && it.epic !== state.epic) return false;
+  if (state.type && it.prefijo !== state.type) return false;
+  if (state.ready && readiness(it).k !== 'go') return false;
+  if (state.q) { const q = lc(state.q); if (![it.id, it.titulo, it.epic, it.tipo].some((v) => lc(v || '').includes(q))) return false; }
+  return true;
+}
+const prio = (p) => { const m = /P(\d)/i.exec(p || ''); return m ? +m[1] : 9; };
+const relRank = (r) => { const i = D.releases.findIndex((x) => x.id === r); return i < 0 ? 99 : i; };
+const rank = (a, b) => (readiness(a).k === 'go' ? 0 : 1) - (readiness(b).k === 'go' ? 0 : 1) || prio(a.prioridad) - prio(b.prioridad) || relRank(a.release) - relRank(b.release) || a.order - b.order;
+
+function card(it) {
+  const r = readiness(it);
+  return `<button type="button" class="card${it.id === D.siguiente ? ' is-next' : ''}" data-id="${esc(it.id)}" aria-describedby="r-${esc(it.id)}">
+    <span class="top"><span class="cid">${esc(it.id)}</span><span class="tag">${esc(typeLabel(it))}</span>${sevChip(it)}<span class="rel-tag r">requisito</span><span class="rel-tag b">depende de esta</span></span>
+    <span class="ttl" style="display:block">${esc(it.titulo)}</span>
+    <span class="meta">${it.puntos ? `<span class="pts">${esc(it.puntos)} pts</span>` : ''}${it.prioridad ? `<span>${esc(it.prioridad)}</span>` : ''}${state.group !== 'release' && it.release ? `<span>${esc(it.release)}</span>` : ''}${state.group !== 'epic' && it.epic ? `<span>${esc(it.epic)}</span>` : ''}${state.group !== 'estado' ? `<span>${esc(ES[it.estado] || it.estado)}</span>` : ''}</span>
+    <span class="ready ${r.k}" id="r-${esc(it.id)}">${ico(r.i)}${esc(r.t)}</span>
+  </button>`;
+}
+function lanes() {
+  const list = D.items.filter(visible);
+  if (state.group === 'estado') {
+    const extra = uniq(D.items.map((i) => i.estado)).filter((e) => !STATES.some((s) => lc(s) === lc(e)));
+    return [...STATES, ...extra].map((s) => ({ name: ES[s] || s, items: list.filter((i) => lc(i.estado) === lc(s)), hideEmpty: ['Blocked', 'Ready for Acceptance', 'Deferred', 'Rejected', 'Released', 'In Review'].includes(s) }));
+  }
+  const key = state.group; const names = key === 'release' ? D.releases.map((r) => r.id) : uniq([...D.epics.map((e) => e.id), ...D.items.map((i) => i.epic)]);
+  const groups = names.map((n) => ({ name: n, items: list.filter((i) => i[key] === n) }));
+  const none = list.filter((i) => !i[key]);
+  if (none.length) groups.push({ name: key === 'release' ? 'Sin release' : 'Sin epic', items: none });
+  return groups.map((g) => ({ ...g, hideEmpty: true }));
+}
+function renderBoard() {
+  const ls = lanes(); const n = ls.reduce((a, l) => a + l.items.length, 0);
+  $('#count').textContent = `${n} de ${D.items.length} elementos`;
+  if (!n) { $('#board').innerHTML = `<div class="nores">Ningún elemento coincide con los filtros. <button class="btn" type="button" id="clear">Quitar filtros</button></div>`; $('#clear').onclick = clearFilters; return; }
+  const shown = ls.filter((l) => l.items.length || !l.hideEmpty);
+  const most = Math.max(...shown.map((l) => l.items.length));
+  // Una columna que acumula mucho más que las demás reparte sus tarjetas en cuadrícula.
+  $('#board').innerHTML = shown.map((l) => `
+    <section class="lane${l.items.length >= 8 && l.items.length === most && shown.length > 1 ? ' wide' : ''}" aria-label="${esc(l.name)}"><h3>${esc(l.name)}<span class="n num">${l.items.length}</span></h3>
+      <div class="cards">${l.items.length ? l.items.sort(rank).map(card).join('') : '<div class="empty">Vacío</div>'}</div></section>`).join('');
+  highlight(state.focus);
+}
+function clearFilters() { Object.assign(state, { q: '', rel: '', epic: '', type: '', ready: false }); $('#q').value = ''; $('#f-rel').value = ''; $('#f-epic').value = ''; $('#f-type').value = ''; $('#f-ready').checked = false; save(); renderBoard(); }
+function highlight(id) {
+  const it = id && byId.get(id);
+  for (const c of document.querySelectorAll('.card')) {
+    c.classList.toggle('req', !!it && it.requiere.includes(c.dataset.id));
+    c.classList.toggle('blk', !!it && it.bloquea.includes(c.dataset.id));
+    c.classList.toggle('sel', !!it && c.dataset.id === id && $('#detail').classList.contains('open'));
+    c.classList.toggle('dim', !!it && c.dataset.id !== id && !it.requiere.includes(c.dataset.id) && !it.bloquea.includes(c.dataset.id));
+  }
+}
+$('#q').addEventListener('input', (e) => { state.q = e.target.value; save(); renderBoard(); });
+for (const [sel, k] of [['#f-rel', 'rel'], ['#f-epic', 'epic'], ['#f-type', 'type']]) $(sel).addEventListener('change', (e) => { state[k] = e.target.value; save(); renderBoard(); });
+$('#f-ready').addEventListener('change', (e) => { state.ready = e.target.checked; save(); renderBoard(); });
+$('#group').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.group = b.dataset.g; for (const x of $('#group').children) x.setAttribute('aria-pressed', String(x === b)); save(); renderBoard(); });
+for (const x of $('#group').children) x.setAttribute('aria-pressed', String(x.dataset.g === state.group));
+const board = $('#board');
+board.addEventListener('mouseover', (e) => { const c = e.target.closest('.card'); if (c && !$('#detail').classList.contains('open')) highlight(c.dataset.id); });
+board.addEventListener('mouseleave', () => { if (!$('#detail').classList.contains('open')) highlight(null); });
+board.addEventListener('focusin', (e) => { const c = e.target.closest('.card'); if (c && !$('#detail').classList.contains('open')) highlight(c.dataset.id); });
+
+// --- Detalle --------------------------------------------------------------------------------------
+let opener = null;
+function route(it) { // requisitos pendientes, de lo más profundo a lo más cercano
+  const out = []; const seen = new Set();
+  (function walk(i) { for (const r of i.requiere) { const x = byId.get(r); if (!x || seen.has(r)) continue; seen.add(r); walk(x); out.push(x); } })(it);
+  return out;
+}
+function openDetail(id, from) {
+  const it = byId.get(id); if (!it) return;
+  opener = from || document.activeElement; state.focus = id; highlight(id);
+  const r = readiness(it); const path = route(it);
+  const m = it.metricas; const c = it.corridas;
+  const kv = [['Tipo', typeLabel(it)], ['Estado', ES[it.estado] || it.estado], ['Epic', it.epic], ['Release', it.release], ['Puntos', it.puntos], ['Prioridad', it.prioridad], ['Severidad', it.severidad]].filter(([, v]) => v);
+  const stLabel = (x) => `${x.hecho ? ico('check') : ''}${esc(ES[x.estado] || x.estado)}`;
+  $('#detail').innerHTML = `
+    <header><h2 id="d-title"><span class="cid">${esc(it.id)}</span>${esc(it.titulo)}</h2><button class="x" type="button" id="d-close" aria-label="Cerrar detalle">${ico('x')}</button></header>
+    <div class="body">
+      <div class="ready ${r.k}" style="margin:0 0 12px">${ico(r.i)}${esc(r.t)}</div>
+      <dl class="kv">${kv.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+      <h3>Para pedírselo al orquestador</h3>${sayBlock(it.frase)}
+      ${path.length ? `<h3>Ruta hasta aquí (${path.filter((x) => !x.hecho).length} pendientes)</h3><ol class="route">${path.map((x) => `<li>${ico(x.hecho ? 'check' : 'clock')}<button type="button" data-open="${esc(x.id)}">${esc(x.id)}</button><span class="tt">${esc(x.titulo)}</span><span class="st">${stLabel(x)}</span></li>`).join('')}</ol>` : ''}
+      ${it.bloquea.length ? `<h3>Esperan a esta (${it.bloquea.length})</h3><ol class="route">${it.bloquea.map((b) => { const x = byId.get(b); return `<li>${ico(x?.hecho ? 'check' : 'arrow')}<button type="button" data-open="${esc(b)}">${esc(b)}</button><span class="tt">${esc(x?.titulo)}</span><span class="st">${x ? stLabel(x) : ''}</span></li>`; }).join('')}</ol>` : ''}
+      ${it.notas.length ? `<h3>Notas del backlog</h3><ul class="notes">${it.notas.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+      ${m || c ? `<h3>Métricas</h3><dl class="kv">${m ? [['Ciclos FAIL', m.fails], ['Costo', m.costo], ['Duración', m.total], ['Modelos', m.modelos]].filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('') : ''}${c ? `<dt>OpenCode</dt><dd class="num">${c.runs} corridas · ${c.tokens.toLocaleString('es')} tokens · USD ${c.usd.toFixed(4)} estimado</dd>` : ''}</dl>` : ''}
+      ${it.spec || it.retro ? `<h3>Archivos</h3><div class="links">${it.spec ? `<a href="${base}${esc(it.spec)}">${ico('file')} Especificación</a>` : ''}${it.retro ? `<a href="${base}${esc(it.retro)}">${ico('file')} Retrospectiva</a>` : ''}</div>` : ''}
+    </div>`;
+  const d = $('#detail'); d.classList.add('open'); d.dataset.last = id; try { history.replaceState(null, '', '#d=' + encodeURIComponent(id)); } catch {}
+  $('#d-close').onclick = closeDetail; $('#d-title').setAttribute('tabindex', '-1'); $('#d-title').focus();
+}
+function closeDetail() {
+  const d = $('#detail'); if (!d.classList.contains('open')) return;
+  d.classList.remove('open'); state.focus = null; highlight(null);
+  try { history.replaceState(null, '', location.pathname + location.search); } catch {}
+  const back = opener && document.contains(opener) ? opener : document.querySelector(`.card[data-id="${CSS.escape(d.dataset.last || '')}"]`);
+  back?.focus();
+}
+document.addEventListener('click', (e) => {
+  const cp = e.target.closest('[data-copy]'); if (cp) { copy(cp.dataset.copy, cp); return; }
+  const op = e.target.closest('[data-open]'); if (op) { e.preventDefault(); if (op.closest('.tabpanel-other')) return; showTab('t-board'); openDetail(op.dataset.open, op); return; }
+  const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id, c);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
+
+// --- Pestañas -------------------------------------------------------------------------------------
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function showTab(id) {
+  for (const t of tabs) { const on = t.id === id; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; $('#' + t.getAttribute('aria-controls')).hidden = !on; }
+  if (id !== 't-board') closeDetail();
+  try { history.replaceState(null, '', '#' + id.slice(2)); } catch {}
+}
+$('.tabs').addEventListener('click', (e) => { const t = e.target.closest('[role="tab"]'); if (t) showTab(t.id); });
+$('.tabs').addEventListener('keydown', (e) => {
+  const i = tabs.indexOf(document.activeElement); if (i < 0) return;
+  const j = e.key === 'ArrowRight' ? (i + 1) % tabs.length : e.key === 'ArrowLeft' ? (i - 1 + tabs.length) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+  if (j >= 0) { e.preventDefault(); tabs[j].focus(); showTab(tabs[j].id); }
+});
+
+// --- Releases -------------------------------------------------------------------------------------
+(function releases() {
+  const pts = (l) => l.reduce((n, i) => n + (Number(i.puntos) || 0), 0);
+  const rows = D.releases.map((r) => {
+    const its = D.items.filter((i) => i.release === r.id).sort((a, b) => a.order - b.order);
+    const done = its.filter((i) => i.hecho); const act = its.filter((i) => ACTIVE.has(lc(i.estado)));
+    const T = pts(its) || 1; const open = its.filter((i) => i.severidad && !i.hecho && lc(i.estado) !== 'rejected');
+    const byType = Object.entries(its.reduce((a, i) => (a[i.prefijo] = (a[i.prefijo] || 0) + 1, a), {})).map(([k, v]) => `${v} ${TYPES[k] ? TYPES[k].toLowerCase() + (v > 1 ? 's' : '') : k}`).join(' · ');
+    return `<article class="rel"><div class="h"><b>${esc(r.id)}</b><span class="st">${esc(r.estado)}</span><span class="pts num">${pts(done)} / ${pts(its)} pts</span></div>
+      ${r.objetivo ? `<p>${esc(r.objetivo)}</p>` : ''}
+      <div class="bar" role="img" aria-label="${pts(done)} de ${pts(its)} puntos terminados"><i class="d" style="width:${pts(done) / T * 100}%"></i><i class="a" style="width:${pts(act) / T * 100}%"></i></div>
+      <div class="legend num"><span>${done.length} de ${its.length} elementos terminados</span>${act.length ? `<span>${act.length} en curso</span>` : ''}<span>${esc(byType)}</span><span>${open.length ? `${open.length} defectos abiertos` : 'Sin defectos abiertos'}</span></div>
+      <div class="ids">${its.map((i) => `<button type="button" class="idbtn${i.hecho ? ' done' : readiness(i).k === 'go' ? ' go' : ''}" data-open="${esc(i.id)}" title="${esc(i.titulo)}">${esc(i.id)}</button>`).join('')}</div></article>`;
+  }).join('');
+  $('#rel').innerHTML = `<h2 class="sec">Releases</h2><p class="lede">Solo el release en curso está comprometido; los siguientes son una previsión (AES 02 §12). Verde: lista para empezar; tachado: terminado.</p>${rows || '<div class="nores">El backlog no tiene releases.</div>'}`;
+})();
+
+// --- Métricas -------------------------------------------------------------------------------------
+// «TASK-001: 2; TASK-002: 3» → 5; «0» → 0.
+const fails = (t) => { if (!t) return 0; const per = [...t.matchAll(/:\s*(\d+)/g)]; return per.length ? per.reduce((n, m) => n + +m[1], 0) : Number(t.match(/\d+/)?.[0] || 0); };
+(function metrics() {
+  const its = D.items.filter((i) => i.metricas || i.corridas);
+  if (!its.length) { $('#met').innerHTML = `<h2 class="sec">Métricas</h2><div class="nores">Todavía no hay métricas: se registran al cerrar cada elemento (<code>docs/harness-findings.md</code>) y en cada delegación a OpenCode (<code>.aes/costs.csv</code>).</div>`; return; }
+  const tot = its.reduce((a, i) => (a.runs += i.corridas?.runs || 0, a.tok += i.corridas?.tokens || 0, a.usd += i.corridas?.usd || 0, a.fail += fails(i.metricas?.fails), a), { runs: 0, tok: 0, usd: 0, fail: 0 });
+  $('#met').innerHTML = `<h2 class="sec">Métricas por elemento</h2>
+    <p class="lede">Ciclos FAIL, costo y duración de <code>docs/harness-findings.md</code> (los consolida el cierre de cada elemento). Las columnas de OpenCode salen de <code>.aes/costs.csv</code>, que es local: solo esta máquina.</p>
+    <table><thead><tr><th>Elemento</th><th>Estado</th><th>Ciclos FAIL</th><th>Costo registrado</th><th>Duración</th><th class="n">Corridas</th><th class="n">Tokens</th><th class="n">USD OpenCode</th></tr></thead>
+    <tbody>${its.map((i) => `<tr><td><button type="button" class="idbtn" data-open="${esc(i.id)}">${esc(i.id)}</button> ${esc(i.titulo)}</td><td>${esc(ES[i.estado] || i.estado)}</td><td>${esc(i.metricas?.fails || '—')}</td><td>${esc(i.metricas?.costo || '—')}</td><td>${esc(i.metricas?.total || '—')}</td><td class="n">${i.corridas?.runs ?? '—'}</td><td class="n">${i.corridas ? i.corridas.tokens.toLocaleString('es') : '—'}</td><td class="n">${i.corridas ? i.corridas.usd.toFixed(4) : '—'}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="2">Total</td><td class="num">${tot.fail}</td><td></td><td></td><td class="n">${tot.runs}</td><td class="n">${tot.tok.toLocaleString('es')}</td><td class="n">${tot.usd.toFixed(4)}</td></tr></tfoot></table>`;
+})();
+
+// --- Guía -----------------------------------------------------------------------------------------
+(function guide() {
+  const present = new Set([...D.items.map((i) => i.prefijo), ...(D.releases.length ? ['REL'] : [])]);
+  const types = [
+    ['EN', 'Enabler', 'Una pieza técnica que varias historias necesitan, con un criterio propio. «Para…, necesitamos…».', 'Avancemos EN-001 con aes-cycle'],
+    ['US', 'Historia', 'Una capacidad que el usuario puede usar, atómica y vertical, menos de 8 puntos. «Como… quiero… para…».', 'Avancemos US-001 con aes-cycle'],
+    ['BUG', 'Defecto', 'Comportamiento ya aceptado que está mal, con severidad. Camino corto T1.', 'Corrijamos BUG-001 con aes-cycle'],
+    ['ST', 'Lote de estabilización', 'Varios defectos corregidos juntos para reabrir la compuerta.', 'Hagamos un lote de estabilización con BUG-001 a BUG-003'],
+    ['SP', 'Spike', 'Investigación cuando lo grande es la incertidumbre, no el trabajo.', 'Investiguemos SP-001 con aes-cycle'],
+    ['CH', 'Chore', 'Mantenimiento con un criterio verificable (configuración, herramienta, script).', 'Hagamos el chore CH-001 con aes-cycle'],
+    ['REL', 'Release', 'Lo que el usuario ya puede hacer cuando sale; dev → main con merge commit.', 'Preparemos el release REL-001'],
+  ];
+  const states = [['Draft', 'Se está definiendo.'], ['Ready', 'Cumple la DoR: criterios, pruebas en RED y tareas aprobados.'], ['In Progress', 'Implementación activa.'], ['In Review', 'Esperando revisión o verificación.'], ['Blocked', 'Depende de una decisión, recurso o corrección.'], ['Ready for Acceptance', 'Gates técnicos superados; falta tu aceptación.'], ['Accepted', 'Aceptado por ti e integrado en dev.'], ['Released', 'En main, por un release o un hotfix.'], ['Rejected', 'No aceptado; requiere corrección o replanteamiento.'], ['Deferred', 'Pospuesto con motivo. Un defecto pospuesto sigue abierto.']];
+  const sec = (title, icon, inner) => `<section><h3>${ico(icon)} ${title}</h3>${inner}</section>`;
+  const dl = (rows) => `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+  $('#guide').innerHTML = `<h2 class="sec">Guía</h2><p class="lede">La nomenclatura de AES en una página. El backlog vive en <code>docs/backlog.md</code> y cambia solo por PR; este tablero se regenera solo tras cada <code>git pull</code>.</p>
+  <div class="guide">
+    ${sec('Tipos de elemento', 'file', dl(types.map(([p, n, d, f]) => [`${p}-NNN`, `${n}${present.has(p) ? '' : ' <small>(no hay en este backlog)</small>'}<small>${d}</small><small>Pídelo: <code>${f}</code></small>`])))}
+    ${sec('Estados', 'play', dl(states.map(([s, d]) => [s, `${ES[s] || s}<small>${d}</small>`])))}
+    ${sec('Marcas de las tarjetas', 'arrow', dl([[`<span class="ready go">${ico('arrow')}Lista</span>`, 'Sus requisitos están aceptados: se puede empezar.'], [`<span class="ready wait">${ico('clock')}Espera</span>`, 'Algún requisito todavía no está aceptado; el detalle muestra la ruta.'], [`<span class="ready lock">${ico('lock')}Compuerta</span>`, 'Lista, pero una historia nueva no pasa a Ready con la compuerta cerrada.'], [`<span class="ready active">${ico('play')}En curso</span>`, 'Ya se está trabajando; un elemento por sesión.'], [`<span class="ready done">${ico('check')}Hecho</span>`, 'Aceptado o liberado.']]))}
+    ${sec('Tracks', 'arrow', dl([['T0', 'Trivial: errata, texto, configuración no funcional. Tarea y CI.'], ['T1', 'Defecto o chore: un solo PR de especificación y pruebas, tareas, verificación y cierre.'], ['T2', 'Historia de alcance conocido: especificación, pruebas en RED, hasta 3 tareas, verificador.'], ['T3', 'Alto riesgo (autenticación, datos sensibles, migraciones, contratos): todo T2, más ADR y pruebas holdout.']]))}
+    ${sec('Severidad y compuerta', 'lock', `<p>Una historia o enabler nuevo no pasa a Ready con un defecto Crítico, Alto o Medio abierto, ni con más de ${esc(D.gate.limite)} Menores. Los defectos, lotes, chores y spikes no pasan por la compuerta.</p>` + dl([['Crítica', 'Solo se trabaja en su corrección.'], ['Alta / Media', 'Cierran la compuerta hasta corregirlos.'], ['Menor', `Se acumulan hasta el límite (${esc(D.gate.limite)}); un lote de estabilización los vacía.`]]))}
+    ${sec('Prioridad', 'arrow', dl([['P0', 'Crítica: va primero.'], ['P1', 'Alta.'], ['P2', 'Normal.'], ['P3', 'Baja.']]) + '<p style="margin-top:8px">El letrero «Siguiente» ordena lo que está listo por prioridad, después por release y después por el orden del backlog.</p>')}
+    ${sec('Etiquetas de los PR', 'check', `<p>Solo las pones tú; la CI comprueba quién las puso.</p>` + dl([['<code>aes:verified</code>', 'Aceptas el PASS del verificador. Sin ella, ninguna tarea se integra.'], ['<code>aes:deps-approved</code>', 'Apruebas los cambios de dependencias. Se conserva si los commits nuevos no tocan manifiestos ni lockfiles.'], ['<code>aes:markers-approved</code>', 'Apruebas un marcador que el guardián señala (un <code>TODO</code>, una supresión).']]))}
+    ${sec('Ramas', 'arrow', dl([['<code>spec/&lt;ID&gt;</code>', 'Especificación y decisiones (orquestador).'], ['<code>qa/&lt;ID&gt;</code>', 'Pruebas de aceptación en RED, plan y tareas.'], ['<code>task/&lt;ID&gt;/TASK-NNN</code>', 'Una tarea del programador o del mecánico.'], ['<code>spec/&lt;ID&gt;-close</code>', 'Cierre: métricas, retrospectiva, catálogo.'], ['<code>dev</code> → <code>main</code>', 'Release, con merge commit; después, back-merge.']]))}
+    ${sec('Nivel de modelo', 'play', `<p>Una tarea puede pedir <code>**Nivel de modelo:** alto — &lt;motivo&gt;</code> (contexto muy grande, razonamiento que cruza muchas piezas, dos ciclos FAIL por defectos del código). Lo propone el orquestador y lo apruebas con las tareas.</p>`)}
+  </div>`;
+})();
+
+const initial = location.hash.slice(1);
+if (['rel', 'met', 'guide'].includes(initial)) showTab('t-' + initial);
+renderBoard();
+// Enlace directo al detalle de un elemento: board.html#d=US-009
+if (initial.startsWith('d=')) openDetail(decodeURIComponent(initial.slice(2)));
+</script>
+</body>
+</html>
