@@ -20,6 +20,7 @@ Con la base vacía, el formulario «Crear la cuenta» crea la única cuenta y de
 - En la web: «Mostrar contraseña», el indicador de largo, los errores por campo, la comprobación de que las dos contraseñas coinciden y el aviso de fallo: son de TASK-002. En esta tarea, un resultado `invalid` o `failed` de `createAccount` no cambia la pantalla.
 - Inicio de sesión con formulario, cierre de sesión, caducidad de la sesión y límite de intentos (US-002, US-003).
 - No se toca `http/health.rs` ni `api/health.ts`, y la línea de estado y el aviso de conexión de EN-001 siguen igual.
+- En `src/server/tests/health.rs` solo cambia la aserción del número de migraciones aplicadas (enmienda del 2026-11-25, tras el BLOCKED del primer intento): se compara con el total de migraciones del proyecto, `sqlx::migrate!("./migrations").iter().count()`, no con un número fijo, para que la próxima migración no la rompa. El resto del archivo no cambia.
 - No se agrega `Secure` a la cookie (EN-003).
 
 ## Criterios que pone en verde

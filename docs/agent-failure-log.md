@@ -5,7 +5,7 @@ Registro de fallos observados en agentes y de los controles añadidos para evita
 ## Patrones activos
 | Patrón | Entradas | Control aplicado | Capa | Estado |
 |---|---|---|---|---|
-| | | | L1 / L2 / L3 / skill / AGENTS.md | Propuesto / Aprobado / Verificado |
+| **BLOCKED por una preparación de la tarea que no anticipa lo que el rol necesita.** El rol hace bien su trabajo, pero topa con algo que el orquestador no previó al preparar la tarea: un archivo que debe cambiar y no está en la superficie, una herramienta que falta en el entorno, o una lectura fuera del worktree. Cada caso cuesta una ida y vuelta con el humano (enmienda, instalación o permiso) y una segunda delegación. Señal para mejorar la metodología: el control debe estar en la preparación (nota de diseño, `aes-doctor`, plantillas), no en el rol | FL-005 (lectura fuera del worktree), FL-006 (superficie), hallazgo del 2026-11-21 19:19 de EN-001 TASK-001 (enlazador MSVC) | Entorno: `aes-doctor` con `AES_DOCTOR_CHECKS` (aplicado tras EN-001). Lectura: `aes-oc.sh` copia `.aes/` al worktree (AES 2.0). Superficie: el de FL-006 | Skill `aes-design-note` y plantilla de tarea | Entorno y lectura: Aprobado. Superficie: Propuesto |
 
 ---
 
@@ -57,4 +57,14 @@ Registro de fallos observados en agentes y de los controles añadidos para evita
 - **Causa probable:** —
 - **Control propuesto:** Con OpenCode, copiar .aes/*-pending.md al worktree (ignorado por git) antes de M1; pedir al humano detener los servidores de la demo antes del cierre
 - **Aprobado por / fecha:** —
+- **Verificado en:** —
+
+## FL-006 — 2026-11-25
+- **Agente / harness / modelo:** programmer / Claude Code (subagente) / claude-sonnet (nivel alto)
+- **Tarea / historia:** US-001 TASK-001
+- **Síntoma:** BLOCKED con todo lo demás en verde: `src/server/tests/health.rs:97` (prueba de EN-001) afirma exactamente 1 migración aplicada, la `0002_account.sql` que pide la tarea la deja en 2 y `cargo test` falla. El archivo figuraba en «Pruebas de regresión afectadas» de la tarea, pero no en su `.scope`, así que el programador no lo podía tocar
+- **Detectado por:** Programador (reporte BLOCKED), antes de publicar
+- **Causa probable:** Hueco de la nota de diseño del orquestador, no del rol. La nota listó las pruebas de regresión afectadas, pero no revisó cuáles **tienen que cambiar** por la tarea. Una prueba que afirma un conteo o una lista global (migraciones, rutas, textos del catálogo, tablas) se rompe con cualquier elemento nuevo de ese tipo
+- **Control propuesto:** En la skill `aes-design-note` (revisión antes de publicar) y en la plantilla de tarea: cada archivo de «Pruebas de regresión afectadas» va en el `.scope` con la línea exacta que puede cambiar, o se justifica por qué no cambia. Antes de cerrar la nota, el orquestador busca en las pruebas existentes aserciones sobre conteos o listas globales de lo que la tarea agrega (`grep` de `migrat`, rutas, claves del catálogo). En el propio proyecto, estas aserciones comparan con el total real (`sqlx::migrate!(…).iter().count()`), no con un número fijo
+- **Aprobado por / fecha:** — (lo pidió registrar GG_WellCoded, 2026-11-25, para tenerlo en cuenta en futuras mejoras de la metodología)
 - **Verificado en:** —
