@@ -1,21 +1,21 @@
-# AES 1.5.2 — workflow de CI del proyecto (capa L3). Ver standard/05 §12, 07 §7–9 y profiles/reference/claude-code-subagents/README.md.
+# AES — the project's CI workflow (layer L3). See standard/05 §12, 07 §7–9 and profiles/reference/claude-code-subagents/README.md.
 #
-# Dos ramas protegidas: dev (lo integrado) y main (lo liberado). Un único job "aes" (el check
-# obligatorio de ambos rulesets). Primero se comprueba la ruta: a main solo llegan releases
-# (dev → main) y hotfixes (ramas de un BUG-NNN). Después, según la rama:
-#   spec/<ID>         build/test + RED de los comandos de verificación nuevos + regresión
-#   qa/<ID>           compuerta de estabilización + build/test + RED de las pruebas de <ID> (con trazabilidad)
-#                     y de sus comandos de verificación nuevos
-#   task/<ID>/<TASK>  invalidar aprobaciones viejas + compuerta (solo Crítica) + guardián (desde la base)
-#                     + build/test + SAST de lo nuevo + criterios de la tarea (.criteria; sin él, el elemento completo)
-#                     + regresión + verificación aprobada (etiqueta aes:verified)
-#   spec/<ID>-close   build/test + el elemento completo (debe ejecutarse y pasar) + regresión
-#   dev → main        release: compuerta (sin exenciones) + main contenido en dev + regresión completa
-#   main → dev        back-merge: regresión completa
-#   push a dev/main   build/test + regresión + informe de la compuerta (y en dev, aviso si main no está contenido)
+# Two protected branches: dev (what is integrated) and main (what is released). A single "aes" job (the
+# required check of both rulesets). First the route is checked: only releases (dev → main) and
+# hotfixes (branches of a BUG-NNN) reach main. Then, depending on the branch:
+#   spec/<ID>         build/test + RED of the new verification commands + regression
+#   qa/<ID>           stabilization gate + build/test + RED of the tests of <ID> (with traceability)
+#                     and of its new verification commands
+#   task/<ID>/<TASK>  invalidate old approvals + gate (Critical only) + guard (from the base)
+#                     + build/test + SAST of what is new + the task's criteria (.criteria; without it, the whole item)
+#                     + regression (+ the aes:verified label, only if AES_REQUIRE_VERIFIED=1)
+#   spec/<ID>-close   build/test + the whole item (it must run and pass) + regression
+#   dev → main        release: gate (no exemptions) + main contained in dev + full regression
+#   main → dev        back-merge: full regression
+#   push to dev/main  build/test + regression + gate report (and on dev, a warning if main is not contained)
 #
-# Los scripts de ci/ se toman SIEMPRE de la rama destino (dev o main), nunca de la rama del PR.
-# La sección marcada «STACK» es específica del proyecto (.NET + React en el ejemplo): sustitúyela.
+# The ci/ scripts are ALWAYS taken from the target branch (dev or main), never from the PR's branch.
+# The section marked "STACK" is project-specific (here, Rust + React).
 name: aes
 
 on:
@@ -27,28 +27,28 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write   # quitar aprobaciones viejas tras commits nuevos
-  issues: write          # leer quién puso cada etiqueta y quitarla (las etiquetas de un PR son de su issue)
+  pull-requests: write   # remove old approvals after new commits
+  issues: write          # read who put on each label and remove it (a PR's labels belong to its issue)
 
 concurrency:
   group: aes-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  AES_APPROVERS: ${{ vars.AES_APPROVERS }}          # logins que pueden aprobar, separados por coma
+  AES_APPROVERS: ${{ vars.AES_APPROVERS }}          # logins that can approve, comma-separated
   AES_MINOR_LIMIT: ${{ vars.AES_MINOR_LIMIT || '5' }}
-  AES_REQUIRE_VERIFIED: ${{ vars.AES_REQUIRE_VERIFIED || '1' }}
+  AES_REQUIRE_VERIFIED: ${{ vars.AES_REQUIRE_VERIFIED || '0' }}   # 2.1: merging is the approval (06 §8)
 
 jobs:
   aes:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (historial completo para comparar con la base)
+      - name: Checkout (full history to compare with the base)
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Scripts de AES desde la rama destino
+      - name: AES scripts from the target branch
         env:
           BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD' }}
         run: |
@@ -57,14 +57,14 @@ jobs:
             if git cat-file -e "$BASE:ci/$f" 2>/dev/null; then
               git show "$BASE:ci/$f" > "$RUNNER_TEMP/aes/$f"
             elif [[ -f "ci/$f" ]]; then
-              echo "::warning::ci/$f aún no existe en la base: se usa la copia de la rama (solo en el PR que lo introduce)."
+              echo "::warning::ci/$f does not exist in the base yet: the branch's copy is used (only in the PR that introduces it)."
               cp "ci/$f" "$RUNNER_TEMP/aes/$f"
             fi
           done
           echo "AES_CI=$RUNNER_TEMP/aes" >> "$GITHUB_ENV"
           echo "AES_BASE=$BASE" >> "$GITHUB_ENV"
 
-      - name: Contexto AES (qué se ejecuta en esta rama)
+      - name: AES context (what runs on this branch)
         id: ctx
         env:
           EVENT: ${{ github.event_name }}
@@ -73,7 +73,7 @@ jobs:
         run: |
           BASE="$AES_BASE" bash "$AES_CI/aes-ctx.sh" | tee -a "$GITHUB_OUTPUT"
 
-      - name: Ruta permitida (07 §7–9)
+      - name: Allowed route (07 §7–9)
         if: ${{ steps.ctx.outputs.route_error != '' }}
         env:
           MSG: ${{ steps.ctx.outputs.route_error }}
@@ -81,23 +81,23 @@ jobs:
           echo "::error::$MSG"
           exit 1
 
-      - name: main contenido en dev
+      - name: main contained in dev
         if: ${{ steps.ctx.outputs.kind == 'release' || (github.event_name == 'push' && github.ref_name == 'dev') }}
         env:
           KIND: ${{ steps.ctx.outputs.kind }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           if git merge-base --is-ancestor origin/main "$HEAD_SHA"; then
-            echo "main está contenido en dev."
+            echo "main is contained in dev."
           elif [[ "$KIND" == "release" ]]; then
-            echo "::error::main tiene commits que dev no tiene (un hotfix o un release sin back-merge). Integra primero el back-merge main → dev, con merge commit (AES 07 §9)."
+            echo "::error::main has commits dev does not have (a hotfix or a release without a back-merge). First merge the back-merge main → dev, with a merge commit (AES 07 §9)."
             exit 1
           else
-            echo "::warning::main tiene commits que dev no tiene. Falta un back-merge main → dev (AES 07 §9); el próximo release fallará hasta hacerlo."
+            echo "::warning::main has commits dev does not have. A back-merge main → dev is missing (AES 07 §9); the next release will fail until it is done."
           fi
 
-      # ---------- Aprobaciones humanas ----------
-      - name: Invalidar aprobaciones tras commits nuevos
+      # ---------- Human approvals ----------
+      - name: Invalidate approvals after new commits
         if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -106,23 +106,23 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
         run: |
-          # Una aprobación vale para los commits que vio quien la dio. Excepción: aes:deps-approved se
-          # conserva si los commits nuevos no cambian manifiestos ni lockfiles (la aprobación cubre las
-          # mismas dependencias). Si no se puede comprobar (force push, script antiguo), se quita.
-          for l in aes:verified aes:deps-approved aes:markers-approved; do
+          # An approval holds for the commits its giver saw. Exception: aes:deps-approved is
+          # kept if the new commits do not change manifests or lockfiles (the approval covers the
+          # same dependencies). If it cannot be checked (force push, old script), it is removed.
+          for l in aes:verified aes:deps-approved aes:markers-approved aes:budget-approved; do
             if [[ ",$LABELS," == *",$l,"* ]]; then
               if [[ "$l" == aes:deps-approved ]] && grep -q -- '--deps-changed' "$AES_CI/aes-guard.sh" \
                  && git cat-file -e "$BEFORE^{commit}" 2>/dev/null && git merge-base --is-ancestor "$BEFORE" "$AFTER" \
                  && [[ -z "$(bash "$AES_CI/aes-guard.sh" --deps-changed "$BEFORE" "$AFTER")" ]]; then
-                echo "Se conserva '$l': los commits nuevos no cambian dependencias."
+                echo "Keeping '$l': the new commits do not change dependencies."
                 continue
               fi
               gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/$(jq -rn --arg l "$l" '$l|@uri')" --silent
-              echo "Quitada '$l': hay commits nuevos desde la aprobación."
+              echo "Removed '$l': there are new commits since the approval."
             fi
           done
 
-      - name: Aprobaciones válidas (quién puso cada etiqueta)
+      - name: Valid approvals (who put on each label)
         id: approvals
         if: ${{ github.event_name == 'pull_request' }}
         env:
@@ -133,9 +133,10 @@ jobs:
           echo "deps=$(bash "$AES_CI/label-approver.sh" aes:deps-approved)" >> "$GITHUB_OUTPUT"
           echo "markers=$(bash "$AES_CI/label-approver.sh" aes:markers-approved)" >> "$GITHUB_OUTPUT"
           echo "verified=$(bash "$AES_CI/label-approver.sh" aes:verified)" >> "$GITHUB_OUTPUT"
+          echo "budget=$(bash "$AES_CI/label-approver.sh" aes:budget-approved)" >> "$GITHUB_OUTPUT"
 
-      # ---------- Compuerta de estabilización (02 §9) ----------
-      - name: Compuerta de estabilización
+      # ---------- Stabilization gate (02 §9) ----------
+      - name: Stabilization gate
         env:
           KIND: ${{ steps.ctx.outputs.kind }}
           ITEM: ${{ steps.ctx.outputs.item }}
@@ -145,64 +146,65 @@ jobs:
             task) BASE="$AES_BASE" bash "$AES_CI/defect-gate.sh" work "$ITEM" ;;
             release) BASE=HEAD bash "$AES_CI/defect-gate.sh" release "" ;;
             push) BASE=HEAD bash "$AES_CI/defect-gate.sh" report "" || true ;;
-            *)    echo "Sin compuerta en ramas de tipo $KIND." ;;
+            *)    echo "No gate on branches of kind $KIND." ;;
           esac
 
-      # ---------- Guardián (ramas de programador) ----------
-      - name: Guardián AES (copia de la rama destino)
+      # ---------- Guard (programmer branches) ----------
+      - name: AES guard (copy from the target branch)
         if: ${{ steps.ctx.outputs.kind == 'task' }}
         env:
           BASE_REF: ${{ env.AES_BASE }}
           TASK_SCOPE_FILE: specs/${{ steps.ctx.outputs.item }}/${{ steps.ctx.outputs.task }}.scope
           AES_ALLOW_MARKERS: ${{ steps.approvals.outputs.markers }}
           AES_ALLOW_DEPS: ${{ steps.approvals.outputs.deps }}
+          AES_ALLOW_BUDGET: ${{ steps.approvals.outputs.budget }}
         run: bash "$AES_CI/aes-guard.sh"
 
-      # ---------- Análisis estático de seguridad (05 §7) ----------
-      # Ojo: una variable sin definir vale null, y null != '0' es FALSO en las expresiones de Actions
-      # (ambos se convierten al número 0). Por eso el valor por defecto con ||.
-      - name: SAST sobre lo que cambia la tarea (Semgrep, OWASP)
+      # ---------- Static security analysis (05 §7) ----------
+      # Careful: an undefined variable is null, and null != '0' is FALSE in Actions expressions
+      # (both are converted to the number 0). Hence the default value with ||.
+      - name: SAST on what the task changes (Semgrep, OWASP)
         if: ${{ steps.ctx.outputs.kind == 'task' && (vars.AES_SAST || '1') != '0' }}
         env:
           SEMGREP_RULES: ${{ vars.AES_SAST_CONFIG || 'p/owasp-top-ten' }}
           SEMGREP_ENABLE_VERSION_CHECK: '0'
         run: |
-          # Solo hallazgos NUEVOS respecto de la base. ERROR falla la tarea (ciclo FAIL);
-          # WARNING/INFO se muestran para que el orquestador los registre como defectos (02 §9).
-          # Las supresiones (nosemgrep) son marcadores del guardián: exigen aprobación humana.
-          # Va antes de restaurar la suite: el árbol de trabajo debe coincidir con HEAD.
+          # Only NEW findings relative to the base. ERROR fails the task (FAIL cycle);
+          # WARNING/INFO are shown so the orchestrator records them as defects (02 §9).
+          # Suppressions (nosemgrep) are guard markers: they require human approval.
+          # It goes before restoring the suite: the working tree must match HEAD.
           pipx install semgrep >/dev/null 2>&1 || pip install --user semgrep >/dev/null
           base=$(git merge-base "$AES_BASE" HEAD)
           semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity WARNING --severity INFO || true
           semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity ERROR --error
 
-      # ---------- Detector de interfaz (05 §7; impeccable, si está instalada) ----------
-      - name: Detector de interfaz sobre lo que cambia la tarea (impeccable)
+      # ---------- Interface detector (05 §7; impeccable, if installed) ----------
+      - name: Interface detector on what the task changes (impeccable)
         if: ${{ steps.ctx.outputs.kind == 'task' && (vars.AES_UI_DETECT || '1') != '0' && hashFiles('.claude/skills/impeccable/scripts/impeccable') != '' }}
         env:
           IMPECCABLE_NO_UPDATE_CHECK: '1'
           DO_NOT_TRACK: '1'
           BLOCKING: ${{ vars.AES_UI_DETECT == 'block' && '1' || '0' }}
         run: |
-          # Solo anota en el PR mientras el proyecto no decida qué reglas bloquean (AES_UI_DETECT=block).
-          # El motor se descarga en su versión fija y se verifica con las huellas de la skill.
+          # It only annotates the PR until the project decides which rules block (AES_UI_DETECT=block).
+          # The engine is downloaded at its fixed version and verified with the skill's checksums.
           base=$(git merge-base "$AES_BASE" HEAD)
           mapfile -t files < <(git diff --name-only --diff-filter=AM "$base"...HEAD \
             | grep -E '\.(html|css|scss|sass|less|tsx|jsx|vue|svelte|astro)$' || true)
-          if [[ ${#files[@]} -eq 0 ]]; then echo "La tarea no cambia archivos de interfaz."; exit 0; fi
+          if [[ ${#files[@]} -eq 0 ]]; then echo "The task changes no interface files."; exit 0; fi
           rc=0; bash .claude/skills/impeccable/scripts/impeccable detect --github "${files[@]}" || rc=$?
           case "$rc" in
-            0) echo "Sin hallazgos." ;;
-            2) echo "Hallazgos de interfaz: el orquestador los registra como defectos (02 §9)."; [[ "$BLOCKING" == 1 ]] && exit 1 || true ;;
-            *) echo "::warning::El detector de interfaz no pudo ejecutarse (código $rc)." ;;
+            0) echo "No findings." ;;
+            2) echo "Interface findings: the orchestrator records them as defects (02 §9)."; [[ "$BLOCKING" == 1 ]] && exit 1 || true ;;
+            *) echo "::warning::The interface detector could not run (code $rc)." ;;
           esac
 
-      - name: Restaurar suite de aceptación y especificaciones desde la rama destino
+      - name: Restore the acceptance suite and specifications from the target branch
         if: ${{ steps.ctx.outputs.kind == 'task' }}
         run: |
           for p in tests/acceptance specs; do
             if git cat-file -e "$AES_BASE:$p" 2>/dev/null; then
-              rm -rf "$p"; git checkout "$AES_BASE" -- "$p"; echo "$p restaurado desde $AES_BASE."
+              rm -rf "$p"; git checkout "$AES_BASE" -- "$p"; echo "$p restored from $AES_BASE."
             fi
           done
 
@@ -258,8 +260,8 @@ jobs:
           npm audit --audit-level=high
       # ---------- fin de STACK ----------
 
-      # ---------- Aceptación (Playwright) ----------
-      - name: Preparar Playwright
+      # ---------- Acceptance (Playwright) ----------
+      - name: Prepare Playwright
         id: pw
         if: ${{ hashFiles('tests/acceptance/package.json') != '' }}
         working-directory: tests/acceptance
@@ -268,8 +270,8 @@ jobs:
           npx playwright install --with-deps chromium
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
-      # ---------- Comandos de verificación (05 §12) ----------
-      - name: RED de los comandos de verificación nuevos
+      # ---------- Verification commands (05 §12) ----------
+      - name: RED of the new verification commands
         if: ${{ steps.ctx.outputs.verify_red != '' }}
         env:
           FILES: ${{ steps.ctx.outputs.verify_red }}
@@ -277,7 +279,7 @@ jobs:
           # shellcheck disable=SC2086
           bash "$AES_CI/run-verify.sh" red HEAD $FILES
 
-      - name: Comandos de verificación (elemento en curso y regresión)
+      - name: Verification commands (item in progress and regression)
         if: ${{ steps.ctx.outputs.verify_green != '' }}
         env:
           FILES: ${{ steps.ctx.outputs.verify_green }}
@@ -286,7 +288,7 @@ jobs:
           # shellcheck disable=SC2086
           bash "$AES_CI/run-verify.sh" green "$REF" $FILES
 
-      - name: RED automático y trazabilidad (rama qa/<ID>)
+      - name: Automatic RED and traceability (branch qa/<ID>)
         if: ${{ steps.pw.outputs.ready == 'true' && steps.ctx.outputs.kind == 'qa' }}
         working-directory: tests/acceptance
         env:
@@ -294,56 +296,58 @@ jobs:
           VERIFY_RED: ${{ steps.ctx.outputs.verify_red }}
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/red-report.json
         run: |
-          echo "Las pruebas de @$ITEM deben EJECUTARSE y FALLAR contra el código actual (AES 05 §2.2)."
-          # «RED de arranque» solo si la base todavía no tiene código de aplicación (ajusta la ruta a tu stack).
+          echo "The tests of @$ITEM must RUN and FAIL against the current code (AES 05 §2.2)."
+          # "Bootstrap RED" only if the base has no application code yet (adjust the path to your stack).
           bootstrap=0
           git cat-file -e "$AES_BASE:src" 2>/dev/null || bootstrap=1
           spec="../../specs/$ITEM/$ITEM.md"
           n=$(npx playwright test --list --grep "@$ITEM(?![\\w-])" 2>/dev/null | sed -n 's/^Total: \([0-9]*\) test.*/\1/p')
           if [[ "${n:-0}" == "0" ]]; then
             if [[ -n "$VERIFY_RED" ]]; then
-              echo "@$ITEM no tiene pruebas de Playwright: sus criterios se comprueban por comando de verificación (paso anterior)."
+              echo "@$ITEM has no Playwright tests: its criteria are checked by verification command (previous step)."
               exit 0
             fi
-            echo "::error::@$ITEM no tiene pruebas de aceptación ni comandos de verificación nuevos: no hay nada que demuestre RED."
+            echo "::error::@$ITEM has no acceptance tests and no new verification commands: there is nothing that shows RED."
             exit 1
           fi
           npx playwright test --grep "@$ITEM(?![\\w-])" --reporter=list,json || true
           node "$AES_CI/red-check.mjs" "$PLAYWRIGHT_JSON_OUTPUT_NAME" "$ITEM" "$bootstrap" "$spec"
 
-      - name: Aceptación (elemento en curso + regresión)
+      - name: Acceptance (item in progress + regression)
         if: ${{ steps.pw.outputs.ready == 'true' && steps.ctx.outputs.kind != 'qa' }}
         working-directory: tests/acceptance
         env:
           WANTED: ${{ steps.ctx.outputs.wanted }}
           ACTIVE: ${{ steps.ctx.outputs.active }}
           VERIFY: ${{ steps.ctx.outputs.verify_green }}
+          ITEM: ${{ steps.ctx.outputs.item }}
         run: |
-          # Cada etiqueta del elemento en curso debe tener pruebas, salvo un defecto que se
-          # comprueba solo por comando de verificación. Así una etiqueta mal escrita no pasa en verde.
+          # Each tag of the item in progress must have tests, except a defect that is
+          # checked only by a verification command. That way a misspelled tag does not pass green.
           count() { npx playwright test --list --grep "@$1(?![\\w-])" 2>/dev/null | sed -n 's/^Total: \([0-9]*\) test.*/\1/p'; }
           for tag in $(tr '|' ' ' <<< "$WANTED"); do
             n=$(count "$tag"); n=${n:-0}
             if [[ "$n" == "0" ]]; then
-              if [[ " $VERIFY " == *"/$tag.verify "* ]]; then
-                echo "@$tag se comprueba por comando de verificación (sin pruebas de Playwright)."
+              # <ID>-AC-NN.verify, AC-NN.verify or BUG-NNN.verify (05 §12).
+              if [[ " $VERIFY " == *"/$tag.verify "* || " $VERIFY " == *"/${tag#"$ITEM"-}.verify "* ]]; then
+                echo "@$tag is checked by verification command (no Playwright tests)."
               else
-                echo "::error::No hay pruebas de aceptación para @$tag. Revisa las etiquetas o el archivo .criteria."
+                echo "::error::There are no acceptance tests for @$tag. Check the tags or the .criteria file."
                 exit 1
               fi
             else
-              echo "@$tag: $n pruebas."
+              echo "@$tag: $n tests."
             fi
           done
           tags=$(printf '%s|%s' "$WANTED" "$ACTIVE" | tr '|' '\n' | { grep -v '^$' || true; } | sort -u | sed 's/.*/@&(?![\\w-])/' | paste -sd'|')
           if [[ -z "$tags" ]]; then
-            echo "No hay elementos en curso ni en regresión: no se ejecuta aceptación."
+            echo "No items in progress or in regression: acceptance is not run (a task with \"none\" in its .criteria only runs the technical tests)."
             exit 0
           fi
-          echo "Ejecutando aceptación para: $tags"
+          echo "Running acceptance for: $tags"
           npx playwright test --grep "$tags" --pass-with-no-tests --reporter=list
 
-      - name: Publicar reporte de Playwright
+      - name: Publish the Playwright report
         if: ${{ always() && steps.pw.outputs.ready == 'true' }}
         uses: actions/upload-artifact@v7
         with:
@@ -352,14 +356,14 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      # ---------- Verificación independiente antes de integrar (06 §8) ----------
-      - name: PASS del verificador aprobado (etiqueta aes:verified)
+      # ---------- Independent verification before merging (06 §8) ----------
+      - name: Verifier PASS approved (aes:verified label)
         if: ${{ steps.ctx.outputs.kind == 'task' && env.AES_REQUIRE_VERIFIED == '1' }}
         env:
           VERIFIED: ${{ steps.approvals.outputs.verified }}
         run: |
           if [[ "$VERIFIED" != "1" ]]; then
-            echo "::error::Falta 'aes:verified': el responsable humano la pone tras leer el PASS del verificador. Si todo lo demás está en verde, este fallo es esperado y NO cuenta como ciclo FAIL."
+            echo "::error::'aes:verified' is missing: the human owner puts it on after reading the verifier's PASS. If everything else is green, this failure is expected and does NOT count as a FAIL cycle."
             exit 1
           fi
-          echo "Verificación aprobada."
+          echo "Verification approved."
