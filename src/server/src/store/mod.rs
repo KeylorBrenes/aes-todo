@@ -1,3 +1,5 @@
+pub mod account;
+
 use std::str::FromStr;
 
 use sqlx::SqlitePool;

@@ -11,10 +11,39 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function stubFetch(implementation: () => Promise<Response>) {
-  const mock = vi.fn(implementation);
+type Routes = {
+  health?: () => Promise<Response>;
+  session?: () => Promise<Response>;
+  account?: () => Promise<Response>;
+};
+
+const healthyResponse = () => Promise.resolve(jsonResponse({ status: 'ok' }));
+const noAccountResponse = () =>
+  Promise.resolve(jsonResponse({ accountExists: false, username: null }));
+
+/** Servidor simulado: cada ruta de la API responde con su propio manejador. */
+function stubServer(routes: Routes = {}) {
+  const mock = vi.fn((input: RequestInfo | URL) => {
+    const url = String(input);
+
+    if (url === '/api/health') {
+      return (routes.health ?? healthyResponse)();
+    }
+    if (url === '/api/session') {
+      return (routes.session ?? noAccountResponse)();
+    }
+    if (url === '/api/account' && routes.account) {
+      return routes.account();
+    }
+
+    return Promise.reject(new Error(`Ruta no simulada: ${url}`));
+  });
   vi.stubGlobal('fetch', mock);
   return mock;
+}
+
+function stubFetch(health: () => Promise<Response>) {
+  return stubServer({ health });
 }
 
 afterEach(() => {
@@ -216,6 +245,117 @@ describe('App', () => {
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: texts.retry })).not.toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      '/api/health',
+      '/api/health',
+      '/api/session',
+    ]);
+  });
+});
+
+describe('App con la cuenta y la sesión', () => {
+  it('sin cuenta muestra el formulario «Crear la cuenta» bajo la línea de estado', async () => {
+    stubServer();
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: texts.createAccountHeading }),
+    ).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent(texts.connected);
+    expect(screen.getByRole('button', { name: texts.createAccountButton })).toBeVisible();
+    expect(screen.queryByText(texts.accountExists)).not.toBeInTheDocument();
+  });
+
+  it('con cuenta y sin sesión muestra «La cuenta ya está creada.» sin formulario', async () => {
+    stubServer({
+      session: () =>
+        Promise.resolve(jsonResponse({ accountExists: true, username: null })),
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText(texts.accountExists)).toBeVisible();
+    expect(screen.queryByRole('button', { name: texts.createAccountButton })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(texts.connected);
+  });
+
+  it('con sesión muestra «Sesión iniciada como <usuario>» sin enfocarlo en la carga', async () => {
+    stubServer({
+      session: () =>
+        Promise.resolve(jsonResponse({ accountExists: true, username: 'ana' })),
+    });
+
+    render(<App />);
+
+    const result = await screen.findByText('Sesión iniciada como ana');
+    expect(result).toBeVisible();
+    expect(result).toHaveClass('screen-text');
+    expect(result).toHaveAttribute('tabindex', '-1');
+    expect(result).not.toHaveFocus();
+    expect(screen.queryByRole('button', { name: texts.createAccountButton })).not.toBeInTheDocument();
+  });
+
+  it('muestra el aviso y «Reintentar» cuando la sesión falla, y el reintento repite las dos llamadas', async () => {
+    const fetchMock = stubServer({ session: () => Promise.resolve(jsonResponse({}, 503)) });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(texts.disconnected);
+    expect(screen.queryByRole('heading', { name: texts.createAccountHeading })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: texts.retry }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+        '/api/health',
+        '/api/session',
+        '/api/health',
+        '/api/session',
+      ]);
+    });
+  });
+
+  it('muestra el aviso cuando la sesión responde con otra forma', async () => {
+    stubServer({ session: () => Promise.resolve(jsonResponse({ status: 'ok' })) });
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(texts.disconnected);
+  });
+
+  it('tras crear la cuenta muestra la sesión y mueve el foco al resultado', async () => {
+    stubServer({
+      account: () => Promise.resolve(jsonResponse({ username: 'ana' }, 201)),
+    });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText(texts.usernameLabel), 'Ana');
+    await user.type(screen.getByLabelText(texts.passwordLabel), 'una frase larga y secreta');
+    await user.type(screen.getByLabelText(texts.repeatPasswordLabel), 'una frase larga y secreta');
+    await user.click(screen.getByRole('button', { name: texts.createAccountButton }));
+
+    const result = await screen.findByText('Sesión iniciada como ana');
+    expect(result).toHaveFocus();
+    expect(screen.queryByRole('button', { name: texts.createAccountButton })).not.toBeInTheDocument();
+  });
+
+  it('si la cuenta ya existía al enviar muestra «La cuenta ya está creada.» y lo enfoca', async () => {
+    stubServer({
+      account: () =>
+        Promise.resolve(jsonResponse({ error: { code: 'account_exists', message: 'm' } }, 409)),
+    });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: texts.createAccountButton }));
+
+    const result = await screen.findByText(texts.accountExists);
+    expect(result).toHaveFocus();
+    expect(screen.queryByRole('button', { name: texts.createAccountButton })).not.toBeInTheDocument();
   });
 });

@@ -94,7 +94,8 @@ async fn health_creates_the_database_and_applies_migrations() -> Result<(), Box<
     let app = start().await?;
 
     assert_created_database(&app.db_path);
-    assert_eq!(applied_migrations(&app.pool).await?, 1);
+    let project_migrations = i64::try_from(sqlx::migrate!("./migrations").iter().count())?;
+    assert_eq!(applied_migrations(&app.pool).await?, project_migrations);
 
     let (status, body) = get(app.router, "/api/health").await?;
 

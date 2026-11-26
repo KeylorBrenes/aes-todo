@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { checkHealth } from './api/health';
+import { getSession } from './api/session';
+import { CreateAccountForm } from './CreateAccountForm';
 import { texts } from './i18n/es';
 
 type ConnectionState = 'checking' | 'ok' | 'error';
+
+type SessionView = { accountExists: boolean; username: string | null };
 
 const statusText: Record<ConnectionState, string> = {
   checking: texts.checking,
@@ -15,21 +19,43 @@ export function App() {
   const [attempt, setAttempt] = useState(0);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
+  const resultRef = useRef<HTMLParagraphElement>(null);
   const retryInProgress = useRef(false);
+  const changedByForm = useRef(false);
+  const [session, setSession] = useState<SessionView>({ accountExists: false, username: null });
 
   useEffect(() => {
     let active = true;
 
-    void checkHealth().then((healthy) => {
-      if (active) {
-        setState(healthy ? 'ok' : 'error');
+    async function connect() {
+      const healthy = await checkHealth();
+      const result = healthy ? await getSession() : null;
+
+      if (!active) {
+        return;
       }
-    });
+
+      if (result?.kind === 'ok') {
+        setSession({ accountExists: result.accountExists, username: result.username });
+        setState('ok');
+      } else {
+        setState('error');
+      }
+    }
+
+    void connect();
 
     return () => {
       active = false;
     };
   }, [attempt]);
+
+  useEffect(() => {
+    if (changedByForm.current && session.accountExists) {
+      changedByForm.current = false;
+      resultRef.current?.focus();
+    }
+  }, [session]);
 
   useEffect(() => {
     if (!retryInProgress.current) {
@@ -52,6 +78,11 @@ export function App() {
     setAttempt((value) => value + 1);
   }
 
+  function showSession(next: SessionView) {
+    changedByForm.current = true;
+    setSession(next);
+  }
+
   return (
     <main className="page">
       <section className="card">
@@ -71,10 +102,23 @@ export function App() {
             <p className="notice-text" role="alert">
               {texts.disconnected}
             </p>
-            <button type="button" className="retry" onClick={retry} ref={retryButtonRef}>
+            <button type="button" className="action-button" onClick={retry} ref={retryButtonRef}>
               {texts.retry}
             </button>
           </div>
+        )}
+
+        {state === 'ok' && !session.accountExists && (
+          <CreateAccountForm
+            onCreated={(username) => showSession({ accountExists: true, username })}
+            onExists={() => showSession({ accountExists: true, username: null })}
+          />
+        )}
+
+        {state === 'ok' && session.accountExists && (
+          <p className="screen-text" tabIndex={-1} ref={resultRef}>
+            {session.username === null ? texts.accountExists : texts.signedInAs(session.username)}
+          </p>
         )}
       </section>
     </main>

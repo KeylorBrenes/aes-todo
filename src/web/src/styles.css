@@ -69,6 +69,53 @@ body {
   outline: none;
 }
 
+.screen-text {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.screen-text:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  justify-items: start;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.field label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background-color: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
 .status-empty {
   position: absolute;
   width: 1px;
@@ -94,7 +141,7 @@ body {
   line-height: 1.5;
 }
 
-.retry {
+.action-button {
   min-height: 44px;
   padding: 0 24px;
   border: 0;
@@ -107,20 +154,20 @@ body {
   transition: transform 120ms ease-out;
 }
 
-.retry:hover {
+.action-button:hover {
   filter: brightness(0.94);
 }
 
-.retry:active {
+.action-button:active {
   transform: scale(0.98);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .retry {
+  .action-button {
     transition: none;
   }
 
-  .retry:active {
+  .action-button:active {
     transform: none;
   }
 }
