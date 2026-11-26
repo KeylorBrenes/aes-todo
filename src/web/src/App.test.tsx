@@ -352,7 +352,10 @@ describe('App con la cuenta y la sesión', () => {
 
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: texts.createAccountButton }));
+    await user.type(await screen.findByLabelText(texts.usernameLabel), 'Ana');
+    await user.type(screen.getByLabelText(texts.passwordLabel), 'una frase larga y secreta');
+    await user.type(screen.getByLabelText(texts.repeatPasswordLabel), 'una frase larga y secreta');
+    await user.click(screen.getByRole('button', { name: texts.createAccountButton }));
 
     const result = await screen.findByText(texts.accountExists);
     expect(result).toHaveFocus();
