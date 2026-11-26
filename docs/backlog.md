@@ -18,7 +18,7 @@ Solo el release en curso está comprometido; los siguientes son una previsión (
 | ID | Tipo | Epic | Título | Requiere | Puntos | Prioridad | Release | Severidad | Estado |
 |---|---|---|---|---|---|---|---|---|---|
 | EN-001 | Enabler | — | Para que las historias se puedan probar de punta a punta, necesitamos el servidor Axum con SQLite entregando la web React, con una prueba de punta a punta y la CI en verde | — | 3 | P0 | REL-001 | — | Accepted |
-| US-001 | Historia | Acceder | Como dueño de la app, quiero crear mi cuenta la primera vez que la abro, para que nadie más pueda reclamarla | EN-001 | 2 | P1 | REL-001 | — | Draft |
+| US-001 | Historia | Acceder | Como dueño de la app, quiero crear mi cuenta la primera vez que la abro, para que nadie más pueda reclamarla | EN-001 | 3 | P1 | REL-001 | — | Draft |
 | US-002 | Historia | Acceder | Como dueño de la app, quiero iniciar sesión con mi usuario y contraseña, para que solo yo vea mis tareas | US-001 | 3 | P1 | REL-001 | — | Draft |
 | US-003 | Historia | Acceder | Como dueño de la app, quiero cerrar sesión, para que nadie use mi cuenta en un equipo que no es mío | US-002 | 1 | P1 | REL-001 | — | Draft |
 | US-004 | Historia | Gestionar tareas | Como dueño de la app, quiero crear una tarea con un texto, para no olvidar lo que tengo que hacer | US-002 | 2 | P1 | REL-001 | — | Draft |
