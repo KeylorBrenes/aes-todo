@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# AC-07 — Con la cuenta ya creada, la contraseña no aparece tal cual en la base de datos.
+#
+# Contrato (specs/US-001/plan.md):
+#   - POST /api/account crea la cuenta con la contraseña guardada solo como hash Argon2id.
+#   - El fixture expone el archivo SQLite y su -wal; aquí se leen los bytes de ambos.
+#
+# La prueba arranca su propio servidor con una base nueva, crea una cuenta por la API y
+# busca la contraseña literal en el archivo de la base y en su -wal.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 2
+
+port="${AES_VERIFY_PORT:-5098}"
+password='Verificacion AC-07 frase 2026'
+
+tmp="$(mktemp -d)"
+db="$tmp/aes-todo.db"
+# El binario Rust es nativo de Windows: DATABASE_URL y WEB_DIST necesitan rutas nativas,
+# no las de MSYS.
+native_db="$db"
+native_web="$PWD/src/web/dist"
+if command -v cygpath >/dev/null 2>&1; then
+  native_db="$(cygpath -w "$db")"
+  native_web="$(cygpath -w "$PWD/src/web/dist")"
+fi
+server_log="$tmp/server.log"
+server_pid=""
+
+cleanup() {
+  if [[ -n "$server_pid" ]]; then
+    # En Windows (Git Bash) el PID de bash no es el PID de Windows: se busca por el
+    # puerto en escucha y se mata el árbol (servidor y lo que haya lanzado).
+    if command -v taskkill >/dev/null 2>&1; then
+      win_pid="$(netstat -ano 2>/dev/null | awk -v p=":$port" '$2 ~ p"$" && $4 == "LISTENING" { print $5; exit }')"
+      if [[ -n "$win_pid" ]]; then
+        taskkill //PID "$win_pid" //T //F >/dev/null 2>&1 || true
+      fi
+    fi
+    kill "$server_pid" >/dev/null 2>&1 || true
+    for _ in $(seq 1 50); do
+      kill -0 "$server_pid" >/dev/null 2>&1 || break
+      sleep 0.1
+    done
+  fi
+  rm -rf "$tmp"
+}
+trap cleanup EXIT
+
+cat >"$tmp/create-account.mjs" <<'NODE'
+const [port, password] = process.argv.slice(2);
+const base = `http://127.0.0.1:${port}`;
+const deadline = Date.now() + 200_000;
+let last = 'sin respuesta';
+
+for (;;) {
+  try {
+    const response = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(3_000) });
+    if (response.ok) break;
+    last = `GET /api/health → HTTP ${response.status}`;
+  } catch (error) {
+    last = `GET /api/health → ${error.message}`;
+  }
+  if (Date.now() > deadline) {
+    console.error(`El servidor no respondió (${last}).`);
+    process.exit(2);
+  }
+  await new Promise((done) => setTimeout(done, 500));
+}
+
+const response = await fetch(`${base}/api/account`, {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ username: 'verificacion.ac07', password }),
+});
+const text = await response.text();
+if (response.status !== 201) {
+  console.error(`POST /api/account → HTTP ${response.status}: ${text}`);
+  process.exit(3);
+}
+
+let body;
+try {
+  body = JSON.parse(text);
+} catch {
+  console.error(`POST /api/account devolvió algo que no es JSON: ${text}`);
+  process.exit(3);
+}
+if (body.username !== 'verificacion.ac07') {
+  console.error(`POST /api/account devolvió un usuario inesperado: ${text}`);
+  process.exit(3);
+}
+NODE
+
+echo "Arrancando el servidor con una base nueva para comprobar la contraseña guardada."
+cargo build --locked --manifest-path src/server/Cargo.toml >"$server_log" 2>&1 || {
+  echo "AC-07 NO se cumple: el servidor no compila."
+  sed 's/^/   servidor: /' "$server_log" | tail -n 20
+  exit 1
+}
+
+server_bin="src/server/target/debug/aes-todo"
+[[ -f "$server_bin.exe" ]] && server_bin="$server_bin.exe"
+
+DATABASE_URL="sqlite:$native_db" \
+  APP_ADDR="127.0.0.1:$port" \
+  WEB_DIST="$native_web" \
+  "$server_bin" >>"$server_log" 2>&1 &
+server_pid=$!
+
+if ! node "$tmp/create-account.mjs" "$port" "$password"; then
+  echo "AC-07 NO se cumple: no se pudo crear la cuenta para inspeccionar la base."
+  sed 's/^/   servidor: /' "$server_log" | tail -n 20
+  exit 1
+fi
+
+if [[ ! -f "$db" ]]; then
+  echo "AC-07 NO se cumple: no existe el archivo de la base de datos ($db)."
+  exit 1
+fi
+
+found=""
+for file in "$db" "$db-wal"; do
+  [[ -f "$file" ]] || continue
+  if grep -aqF -- "$password" "$file"; then
+    found="$file"
+    break
+  fi
+done
+
+if [[ -n "$found" ]]; then
+  echo "AC-07 NO se cumple: la contraseña aparece tal cual en $found."
+  exit 1
+fi
+
+echo "AC-07 OK: la contraseña no aparece tal cual en la base de datos ni en su -wal."

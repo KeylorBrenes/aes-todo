@@ -19,13 +19,14 @@ Desde esta carpeta (`tests/acceptance`):
 npm test -- --grep "@EN-001(?![\w-])"
 ```
 
-El fixture (`fixtures/app.ts`) arranca **un** servidor en `http://127.0.0.1:5080` con
-`DATABASE_URL` apuntando a un archivo inexistente en una carpeta temporal, `APP_ADDR` y
+El fixture (`fixtures/app.ts`) arranca **un servidor por prueba** en `http://127.0.0.1:5080`
+con `DATABASE_URL` apuntando a un archivo inexistente en una carpeta temporal, `APP_ADDR` y
 `WEB_DIST` como define el contrato de EN-001. Si la web existe (`src/web/package.json`), la
-compila antes. Al terminar, detiene el servidor y borra la carpeta temporal.
+compila antes. Al terminar cada prueba, detiene su servidor y borra su carpeta temporal.
 
-Las pruebas comparten ese servidor y por eso la suite corre con un solo worker. Cada prueba es
-independiente en sus datos: ninguna depende de lo que cree otra ni compara totales globales.
+Así cada prueba parte de una base vacía (sin cuenta), que es lo que exigen las pruebas de
+US-001; la suite sigue corriendo con un solo worker en el puerto fijo. Las pruebas son
+independientes en sus datos: ninguna depende de lo que cree otra ni compara totales globales.
 
 ## Etiquetas
 
