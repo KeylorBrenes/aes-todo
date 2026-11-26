@@ -32,13 +32,17 @@ With no present reason, or with a low cost of adding it later: **it is not used*
 - **Level 1 where it is not obvious:** where the logic ends and input/output begins; which dependencies are received and through where; where this feature's data access lives; at which boundary it is validated and to which type it is converted.
 - **API edges** (if the task adds or changes routes): for each prefix, what an unsupported method, an unknown route and the trailing slash return, with which body, and which fallback covers it. By default frameworks respond without the contract's body, and the verifier tests it.
 - **Dynamic behaviour of the interface** (if the task has UI): one row per state transition with where focus goes, what is announced and in which live region, and whether the focus ring shows (with keyboard, with mouse or never, according to the type of element and `DESIGN.md`); which live regions are mounted from page load; whether a message reserves space; and which responses the technical tests must cover (also a success with an unexpected body). Consult the catalogue: what was already decided on another screen is cited, not redesigned. If impeccable is registered, the summary of its `shape` is the source of the states.
+- **Tests the task obliges to change** (FL-006): search the existing tests for those that exercise a piece the task modifies, and for assertions on counts or lists of something it adds (`grep` for migrations, routes, catalogue keys, the component's name). Each one goes into the `.scope` with what may change in it, or the note says why it does not change. In aes-todo, missing one sent the programmer to BLOCKED twice in the same story.
+- **Commit plan:** one commit per criterion or piece, each with its tests, in the order they are built (for example: migration; domain rules and their tests; each handler with its tests; each view with its tests).
+- **Production budget per piece:** estimate each piece, both ends of a new function included (server and web) and the test cases the note requires. If the sum goes over the profile's limit, split the task (by layer if a criterion does not fit end to end: the earlier task writes `none` in its `.criteria`) before `Ready`.
 - **Catalogue:** if the note introduces a new pattern or a new "no", note it to update `docs/design-catalog.md` at close.
 
 ## 4. Review it before publishing it
 - Does each piece have **one** responsibility, named without "and"?
 - Is there any pattern without a present reason? Remove it.
 - Does "what is not done" cover what a junior programmer would add "just in case"?
-- Does the note fit in the task's change surface? If it requires touching more, the surface or the split into tasks is wrong.
+- Does the note fit in the task's change surface, **including the tests it obliges to change**? If it requires touching more, the surface or the split into tasks is wrong.
+- Does the production estimate fit in the budget? If not, split now: an "indicative" budget ended in a 2075-line PR (FL-007).
 - Is there any decision the programmer would have to improvise and the verifier is going to test (focus, announcements, the body of an error, an unexpected response)? Write it: each one missing is a likely FAIL cycle.
 - Does it contradict the catalogue or an ADR? Then it is a new decision: record it (D-NN) or propose an ADR.
 

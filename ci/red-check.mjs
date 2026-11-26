@@ -53,6 +53,17 @@ console.log(`Item: @${story} | tests found: ${tests.length} | run: ${executed.le
 for (const t of tests) console.log(`  - [${t.status}] ${t.title}${t.message ? `  →  ${t.message.slice(0, 160)}` : ''}`);
 for (const e of globalErrors) console.log(`  ! global error: ${e.slice(0, 200)}`);
 
+// 2.1: the criterion → test matrix, generated from the titles. QA pastes this output into the plan
+// instead of writing the matrix by hand (05 §2.2).
+if (tests.length) {
+  const crit = (t) => t.title.match(/^\s*((?:AC|BUG)-\d+)/)?.[1] ?? '—';
+  const cell = (s) => s.replace(/\|/g, '\\|');
+  console.log('\n| Criterion | Test | Result against the base | First line of the failure |\n|---|---|---|---|');
+  for (const t of [...tests].sort((a, b) => crit(a).localeCompare(crit(b), 'en', { numeric: true })))
+    console.log(`| ${crit(t)} | ${cell(t.title)} | ${t.status} | ${cell(t.message.slice(0, 120)) || '—'} |`);
+  console.log('');
+}
+
 // Traceability: before RED, because a test without a criterion must not reach review.
 if (specPath) {
   if (!existsSync(specPath)) fail(`The specification ${specPath} does not exist, so traceability cannot be checked.`);

@@ -1,0 +1,369 @@
+# AES — the project's CI workflow (layer L3). See standard/05 §12, 07 §7–9 and profiles/reference/claude-code-subagents/README.md.
+#
+# Two protected branches: dev (what is integrated) and main (what is released). A single "aes" job (the
+# required check of both rulesets). First the route is checked: only releases (dev → main) and
+# hotfixes (branches of a BUG-NNN) reach main. Then, depending on the branch:
+#   spec/<ID>         build/test + RED of the new verification commands + regression
+#   qa/<ID>           stabilization gate + build/test + RED of the tests of <ID> (with traceability)
+#                     and of its new verification commands
+#   task/<ID>/<TASK>  invalidate old approvals + gate (Critical only) + guard (from the base)
+#                     + build/test + SAST of what is new + the task's criteria (.criteria; without it, the whole item)
+#                     + regression (+ the aes:verified label, only if AES_REQUIRE_VERIFIED=1)
+#   spec/<ID>-close   build/test + the whole item (it must run and pass) + regression
+#   dev → main        release: gate (no exemptions) + main contained in dev + full regression
+#   main → dev        back-merge: full regression
+#   push to dev/main  build/test + regression + gate report (and on dev, a warning if main is not contained)
+#
+# The ci/ scripts are ALWAYS taken from the target branch (dev or main), never from the PR's branch.
+# The section marked "STACK" is project-specific (here, Rust + React).
+name: aes
+
+on:
+  pull_request:
+    branches: [main, dev]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+  pull-requests: write   # remove old approvals after new commits
+  issues: write          # read who put on each label and remove it (a PR's labels belong to its issue)
+
+concurrency:
+  group: aes-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AES_APPROVERS: ${{ vars.AES_APPROVERS }}          # logins that can approve, comma-separated
+  AES_MINOR_LIMIT: ${{ vars.AES_MINOR_LIMIT || '5' }}
+  AES_REQUIRE_VERIFIED: ${{ vars.AES_REQUIRE_VERIFIED || '0' }}   # 2.1: merging is the approval (06 §8)
+
+jobs:
+  aes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history to compare with the base)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: AES scripts from the target branch
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/aes"
+          for f in aes-ctx.sh aes-guard.sh defect-gate.sh run-verify.sh label-approver.sh red-check.mjs; do
+            if git cat-file -e "$BASE:ci/$f" 2>/dev/null; then
+              git show "$BASE:ci/$f" > "$RUNNER_TEMP/aes/$f"
+            elif [[ -f "ci/$f" ]]; then
+              echo "::warning::ci/$f does not exist in the base yet: the branch's copy is used (only in the PR that introduces it)."
+              cp "ci/$f" "$RUNNER_TEMP/aes/$f"
+            fi
+          done
+          echo "AES_CI=$RUNNER_TEMP/aes" >> "$GITHUB_ENV"
+          echo "AES_BASE=$BASE" >> "$GITHUB_ENV"
+
+      - name: AES context (what runs on this branch)
+        id: ctx
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          TARGET: ${{ github.base_ref || github.ref_name }}
+        run: |
+          BASE="$AES_BASE" bash "$AES_CI/aes-ctx.sh" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Allowed route (07 §7–9)
+        if: ${{ steps.ctx.outputs.route_error != '' }}
+        env:
+          MSG: ${{ steps.ctx.outputs.route_error }}
+        run: |
+          echo "::error::$MSG"
+          exit 1
+
+      - name: main contained in dev
+        if: ${{ steps.ctx.outputs.kind == 'release' || (github.event_name == 'push' && github.ref_name == 'dev') }}
+        env:
+          KIND: ${{ steps.ctx.outputs.kind }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if git merge-base --is-ancestor origin/main "$HEAD_SHA"; then
+            echo "main is contained in dev."
+          elif [[ "$KIND" == "release" ]]; then
+            echo "::error::main has commits dev does not have (a hotfix or a release without a back-merge). First merge the back-merge main → dev, with a merge commit (AES 07 §9)."
+            exit 1
+          else
+            echo "::warning::main has commits dev does not have. A back-merge main → dev is missing (AES 07 §9); the next release will fail until it is done."
+          fi
+
+      # ---------- Human approvals ----------
+      - name: Invalidate approvals after new commits
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+        run: |
+          # An approval holds for the commits its giver saw. Exception: aes:deps-approved is
+          # kept if the new commits do not change manifests or lockfiles (the approval covers the
+          # same dependencies). If it cannot be checked (force push, old script), it is removed.
+          for l in aes:verified aes:deps-approved aes:markers-approved aes:budget-approved; do
+            if [[ ",$LABELS," == *",$l,"* ]]; then
+              if [[ "$l" == aes:deps-approved ]] && grep -q -- '--deps-changed' "$AES_CI/aes-guard.sh" \
+                 && git cat-file -e "$BEFORE^{commit}" 2>/dev/null && git merge-base --is-ancestor "$BEFORE" "$AFTER" \
+                 && [[ -z "$(bash "$AES_CI/aes-guard.sh" --deps-changed "$BEFORE" "$AFTER")" ]]; then
+                echo "Keeping '$l': the new commits do not change dependencies."
+                continue
+              fi
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/$(jq -rn --arg l "$l" '$l|@uri')" --silent
+              echo "Removed '$l': there are new commits since the approval."
+            fi
+          done
+
+      - name: Valid approvals (who put on each label)
+        id: approvals
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          echo "deps=$(bash "$AES_CI/label-approver.sh" aes:deps-approved)" >> "$GITHUB_OUTPUT"
+          echo "markers=$(bash "$AES_CI/label-approver.sh" aes:markers-approved)" >> "$GITHUB_OUTPUT"
+          echo "verified=$(bash "$AES_CI/label-approver.sh" aes:verified)" >> "$GITHUB_OUTPUT"
+          echo "budget=$(bash "$AES_CI/label-approver.sh" aes:budget-approved)" >> "$GITHUB_OUTPUT"
+
+      # ---------- Stabilization gate (02 §9) ----------
+      - name: Stabilization gate
+        env:
+          KIND: ${{ steps.ctx.outputs.kind }}
+          ITEM: ${{ steps.ctx.outputs.item }}
+        run: |
+          case "$KIND" in
+            qa)   BASE="$AES_BASE" bash "$AES_CI/defect-gate.sh" start "$ITEM" ;;
+            task) BASE="$AES_BASE" bash "$AES_CI/defect-gate.sh" work "$ITEM" ;;
+            release) BASE=HEAD bash "$AES_CI/defect-gate.sh" release "" ;;
+            push) BASE=HEAD bash "$AES_CI/defect-gate.sh" report "" || true ;;
+            *)    echo "No gate on branches of kind $KIND." ;;
+          esac
+
+      # ---------- Guard (programmer branches) ----------
+      - name: AES guard (copy from the target branch)
+        if: ${{ steps.ctx.outputs.kind == 'task' }}
+        env:
+          BASE_REF: ${{ env.AES_BASE }}
+          TASK_SCOPE_FILE: specs/${{ steps.ctx.outputs.item }}/${{ steps.ctx.outputs.task }}.scope
+          AES_ALLOW_MARKERS: ${{ steps.approvals.outputs.markers }}
+          AES_ALLOW_DEPS: ${{ steps.approvals.outputs.deps }}
+          AES_ALLOW_BUDGET: ${{ steps.approvals.outputs.budget }}
+        run: bash "$AES_CI/aes-guard.sh"
+
+      # ---------- Static security analysis (05 §7) ----------
+      # Careful: an undefined variable is null, and null != '0' is FALSE in Actions expressions
+      # (both are converted to the number 0). Hence the default value with ||.
+      - name: SAST on what the task changes (Semgrep, OWASP)
+        if: ${{ steps.ctx.outputs.kind == 'task' && (vars.AES_SAST || '1') != '0' }}
+        env:
+          SEMGREP_RULES: ${{ vars.AES_SAST_CONFIG || 'p/owasp-top-ten' }}
+          SEMGREP_ENABLE_VERSION_CHECK: '0'
+        run: |
+          # Only NEW findings relative to the base. ERROR fails the task (FAIL cycle);
+          # WARNING/INFO are shown so the orchestrator records them as defects (02 §9).
+          # Suppressions (nosemgrep) are guard markers: they require human approval.
+          # It goes before restoring the suite: the working tree must match HEAD.
+          pipx install semgrep >/dev/null 2>&1 || pip install --user semgrep >/dev/null
+          base=$(git merge-base "$AES_BASE" HEAD)
+          semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity WARNING --severity INFO || true
+          semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity ERROR --error
+
+      # ---------- Interface detector (05 §7; impeccable, if installed) ----------
+      - name: Interface detector on what the task changes (impeccable)
+        if: ${{ steps.ctx.outputs.kind == 'task' && (vars.AES_UI_DETECT || '1') != '0' && hashFiles('.claude/skills/impeccable/scripts/impeccable') != '' }}
+        env:
+          IMPECCABLE_NO_UPDATE_CHECK: '1'
+          DO_NOT_TRACK: '1'
+          BLOCKING: ${{ vars.AES_UI_DETECT == 'block' && '1' || '0' }}
+        run: |
+          # It only annotates the PR until the project decides which rules block (AES_UI_DETECT=block).
+          # The engine is downloaded at its fixed version and verified with the skill's checksums.
+          base=$(git merge-base "$AES_BASE" HEAD)
+          mapfile -t files < <(git diff --name-only --diff-filter=AM "$base"...HEAD \
+            | grep -E '\.(html|css|scss|sass|less|tsx|jsx|vue|svelte|astro)$' || true)
+          if [[ ${#files[@]} -eq 0 ]]; then echo "The task changes no interface files."; exit 0; fi
+          rc=0; bash .claude/skills/impeccable/scripts/impeccable detect --github "${files[@]}" || rc=$?
+          case "$rc" in
+            0) echo "No findings." ;;
+            2) echo "Interface findings: the orchestrator records them as defects (02 §9)."; [[ "$BLOCKING" == 1 ]] && exit 1 || true ;;
+            *) echo "::warning::The interface detector could not run (code $rc)." ;;
+          esac
+
+      - name: Restore the acceptance suite and specifications from the target branch
+        if: ${{ steps.ctx.outputs.kind == 'task' }}
+        run: |
+          for p in tests/acceptance specs; do
+            if git cat-file -e "$AES_BASE:$p" 2>/dev/null; then
+              rm -rf "$p"; git checkout "$AES_BASE" -- "$p"; echo "$p restored from $AES_BASE."
+            fi
+          done
+
+      # ---------- STACK: compilación y pruebas del proyecto (Rust + React) ----------
+      # Mantén estos comandos alineados con ci/validate.sh.
+      - name: Instalar Rust
+        if: ${{ hashFiles('src/server/Cargo.toml') != '' }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Caché de Rust
+        if: ${{ hashFiles('src/server/Cargo.toml') != '' }}
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/server -> target
+
+      - name: Formato, lint, pruebas y build (servidor)
+        if: ${{ hashFiles('src/server/Cargo.toml') != '' }}
+        working-directory: src/server
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --locked
+          cargo build --locked
+
+      - name: Instalar cargo-audit
+        if: ${{ hashFiles('src/server/Cargo.lock') != '' }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      - name: Auditoría de dependencias (servidor)
+        if: ${{ hashFiles('src/server/Cargo.lock') != '' }}
+        working-directory: src/server
+        run: cargo audit
+
+      - name: Instalar Node
+        if: ${{ hashFiles('src/web/package.json', 'tests/acceptance/package.json') != '' }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Lint, tipos, pruebas, build y auditoría (web)
+        if: ${{ hashFiles('src/web/package.json') != '' }}
+        working-directory: src/web
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build
+          npm audit --audit-level=high
+      # ---------- fin de STACK ----------
+
+      # ---------- Acceptance (Playwright) ----------
+      - name: Prepare Playwright
+        id: pw
+        if: ${{ hashFiles('tests/acceptance/package.json') != '' }}
+        working-directory: tests/acceptance
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      # ---------- Verification commands (05 §12) ----------
+      - name: RED of the new verification commands
+        if: ${{ steps.ctx.outputs.verify_red != '' }}
+        env:
+          FILES: ${{ steps.ctx.outputs.verify_red }}
+        run: |
+          # shellcheck disable=SC2086
+          bash "$AES_CI/run-verify.sh" red HEAD $FILES
+
+      - name: Verification commands (item in progress and regression)
+        if: ${{ steps.ctx.outputs.verify_green != '' }}
+        env:
+          FILES: ${{ steps.ctx.outputs.verify_green }}
+          REF: ${{ steps.ctx.outputs.reg_ref }}
+        run: |
+          # shellcheck disable=SC2086
+          bash "$AES_CI/run-verify.sh" green "$REF" $FILES
+
+      - name: Automatic RED and traceability (branch qa/<ID>)
+        if: ${{ steps.pw.outputs.ready == 'true' && steps.ctx.outputs.kind == 'qa' }}
+        working-directory: tests/acceptance
+        env:
+          ITEM: ${{ steps.ctx.outputs.item }}
+          VERIFY_RED: ${{ steps.ctx.outputs.verify_red }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/red-report.json
+        run: |
+          echo "The tests of @$ITEM must RUN and FAIL against the current code (AES 05 §2.2)."
+          # "Bootstrap RED" only if the base has no application code yet (adjust the path to your stack).
+          bootstrap=0
+          git cat-file -e "$AES_BASE:src" 2>/dev/null || bootstrap=1
+          spec="../../specs/$ITEM/$ITEM.md"
+          n=$(npx playwright test --list --grep "@$ITEM(?![\\w-])" 2>/dev/null | sed -n 's/^Total: \([0-9]*\) test.*/\1/p')
+          if [[ "${n:-0}" == "0" ]]; then
+            if [[ -n "$VERIFY_RED" ]]; then
+              echo "@$ITEM has no Playwright tests: its criteria are checked by verification command (previous step)."
+              exit 0
+            fi
+            echo "::error::@$ITEM has no acceptance tests and no new verification commands: there is nothing that shows RED."
+            exit 1
+          fi
+          npx playwright test --grep "@$ITEM(?![\\w-])" --reporter=list,json || true
+          node "$AES_CI/red-check.mjs" "$PLAYWRIGHT_JSON_OUTPUT_NAME" "$ITEM" "$bootstrap" "$spec"
+
+      - name: Acceptance (item in progress + regression)
+        if: ${{ steps.pw.outputs.ready == 'true' && steps.ctx.outputs.kind != 'qa' }}
+        working-directory: tests/acceptance
+        env:
+          WANTED: ${{ steps.ctx.outputs.wanted }}
+          ACTIVE: ${{ steps.ctx.outputs.active }}
+          VERIFY: ${{ steps.ctx.outputs.verify_green }}
+          ITEM: ${{ steps.ctx.outputs.item }}
+        run: |
+          # Each tag of the item in progress must have tests, except a defect that is
+          # checked only by a verification command. That way a misspelled tag does not pass green.
+          count() { npx playwright test --list --grep "@$1(?![\\w-])" 2>/dev/null | sed -n 's/^Total: \([0-9]*\) test.*/\1/p'; }
+          for tag in $(tr '|' ' ' <<< "$WANTED"); do
+            n=$(count "$tag"); n=${n:-0}
+            if [[ "$n" == "0" ]]; then
+              # <ID>-AC-NN.verify, AC-NN.verify or BUG-NNN.verify (05 §12).
+              if [[ " $VERIFY " == *"/$tag.verify "* || " $VERIFY " == *"/${tag#"$ITEM"-}.verify "* ]]; then
+                echo "@$tag is checked by verification command (no Playwright tests)."
+              else
+                echo "::error::There are no acceptance tests for @$tag. Check the tags or the .criteria file."
+                exit 1
+              fi
+            else
+              echo "@$tag: $n tests."
+            fi
+          done
+          tags=$(printf '%s|%s' "$WANTED" "$ACTIVE" | tr '|' '\n' | { grep -v '^$' || true; } | sort -u | sed 's/.*/@&(?![\\w-])/' | paste -sd'|')
+          if [[ -z "$tags" ]]; then
+            echo "No items in progress or in regression: acceptance is not run (a task with \"none\" in its .criteria only runs the technical tests)."
+            exit 0
+          fi
+          echo "Running acceptance for: $tags"
+          npx playwright test --grep "$tags" --pass-with-no-tests --reporter=list
+
+      - name: Publish the Playwright report
+        if: ${{ always() && steps.pw.outputs.ready == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: tests/acceptance/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # ---------- Independent verification before merging (06 §8) ----------
+      - name: Verifier PASS approved (aes:verified label)
+        if: ${{ steps.ctx.outputs.kind == 'task' && env.AES_REQUIRE_VERIFIED == '1' }}
+        env:
+          VERIFIED: ${{ steps.approvals.outputs.verified }}
+        run: |
+          if [[ "$VERIFIED" != "1" ]]; then
+            echo "::error::'aes:verified' is missing: the human owner puts it on after reading the verifier's PASS. If everything else is green, this failure is expected and does NOT count as a FAIL cycle."
+            exit 1
+          fi
+          echo "Verification approved."

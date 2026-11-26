@@ -83,6 +83,7 @@ Do not keep asking to detail distant stories: that detail is asked in their refi
 6. If it does not exist, the local copy of the DoR/DoD in `docs/aes/` (the AES installer leaves it there).
 7. **Interface**, if the project has one (section 4.1).
 8. **Machine environment**, as soon as the human chooses the stack: add to `AES_DOCTOR_CHECKS` in `.claude/aes.env` the checks for their toolchain, with a **minimal build** per compiled language (`probe:rust`, `probe:dotnet`; without it a compiler without a linker or without an SDK is not detected) and whatever acceptance needs (Playwright browsers). Run `bash .claude/scripts/aes-doctor.sh` and, if something fails, give the human **in a single message** everything they have to install, with the command or link for each thing for their operating system. EN-001 does not start with the environment red. The change to `aes.env` goes in the inception PR.
+9. **Feedback rules** (AES 05 §13): translate the general principles to the chosen stack and write them in the profile's "Feedback speed" section, with the feedback budget: how CI builds once and caches, how the acceptance fixture reuses the built server, the command to run one criterion. EN-001's tasks build the CI and the fixture by them, so they are part of its design notes.
 
 ### 4.1 Interface: product context and visual direction
 

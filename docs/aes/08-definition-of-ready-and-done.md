@@ -54,7 +54,7 @@ A task can start when:
 - [ ] dependencies/contracts are known;
 - [ ] the agent's permissions are defined;
 - [ ] the exact validation commands and the affected regression tests are listed;
-- [ ] the diff budget is estimated separately for production and tests;
+- [ ] the production budget is estimated per piece and is within the profile's limit, and the commit plan lists one commit per criterion or piece (04 §2, §3);
 - [ ] its model level is set (standard, or a higher level with its reason: 06 §12.1);
 - [ ] the completion condition is defined;
 - [ ] the necessary context is available, and the environment check passes (`aes-doctor` in the reference implementation).

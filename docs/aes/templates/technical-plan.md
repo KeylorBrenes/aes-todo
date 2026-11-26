@@ -16,9 +16,10 @@
 [Which minimal part of each layer this story needs: migration, server, interface. Nothing from other stories.]
 
 ## Tasks (3 at most, 04 §3)
-| ID | Result | Criteria it turns green | Surface | Agent |
-|---|---|---|---|---|
-| TASK-001 | | AC-01, AC-02 | `TASK-001.scope` | programmer |
+| ID | Result | Criteria it turns green | Production budget | Surface | Agent |
+|---|---|---|---|---|---|
+| TASK-001 | [e.g. server side of AC-01 and AC-02] | `none` (technical tests of the note) | 250 | `TASK-001.scope` | programmer |
+| TASK-002 | [e.g. the form] | AC-01, AC-02 | 200 | `TASK-002.scope` | programmer |
 
 [Each task has its `TASK-NNN.md` file with the design note (`design-note.md`), its `.scope` and, except the last one, its `.criteria`.]
 

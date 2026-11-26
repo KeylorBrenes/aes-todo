@@ -11,6 +11,8 @@
 #   AES_ALLOW_MARKERS   "1" only if someone other than the programmer
 #                       approved the markers (e.g. a PR label put on by a CODEOWNER)
 #   AES_ALLOW_DEPS      "1" only if dependency changes were approved
+#   AES_ALLOW_BUDGET    "1" only if the human approved going over the task's production budget
+#   AES_BUDGET_TOLERANCE  percentage over the budget that still passes (25 by default)
 #
 # Exit codes: 0 = OK, 1 = violation.
 set -euo pipefail
@@ -19,12 +21,16 @@ BASE="${BASE_REF:-origin/dev}"
 SCOPE_PATH="${TASK_SCOPE_FILE:-}"
 ALLOW_MARKERS="${AES_ALLOW_MARKERS:-0}"
 ALLOW_DEPS="${AES_ALLOW_DEPS:-0}"
+ALLOW_BUDGET="${AES_ALLOW_BUDGET:-0}"
+TOLERANCE="${AES_BUDGET_TOLERANCE:-25}"
 
 # Paths the programmer can never touch. Adjust in the project profile.
 PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
 # Manifests, lockfiles, package sources and local tools. Changing the source or a
 # tool is as sensitive as changing a package (FL of nuget.config and dotnet-tools.json).
 DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?|nuget\.config|NuGet\.Config|\.npmrc|\.yarnrc(\.yml)?|pip\.conf|global\.json|\.config/dotnet-tools\.json)$'
+# Test files: they do not count toward the production budget.
+TESTS_RE='(^|/)(tests?|specs?|__tests__)/|[._-](test|spec)s?\.'
 # Markers of skipping, silencing or swallowed errors.
 MARKERS_RE='\.skip\(|\bxit\(|\bxdescribe\(|@Disabled|@Ignore|#\[ignore\]|pytest\.mark\.skip|Skip *= *"|eslint-disable|@ts-ignore|@ts-expect-error|#[[:space:]]*type:[[:space:]]*ignore|#pragma warning disable|noqa|nosemgrep|NOSONAR|\bTODO\b|\bFIXME\b|\bHACK\b|catch *(\([^)]*\))? *\{ *\}|except[^:]*: *pass'
 
@@ -120,6 +126,35 @@ if [[ -n "$markers" ]]; then
     fail=1
   fi
   report "${markers%$'\n'}"
+fi
+
+# 6. Production budget (2.1, 04 §3): a limit, not an estimate. Read from the task's specification in
+#    the base ("**Production budget:** N"); production = added lines outside tests, dependency
+#    files, documentation and generated code.
+if [[ -n "$SCOPE_PATH" ]]; then
+  task_md="${SCOPE_PATH%.scope}.md"
+  budget=$( { git show "$BASE:$task_md" 2>/dev/null || true; } \
+    | sed -nE 's/^[-*[:space:]]*\*\*(Production budget|Presupuesto de producci[oó]n):\*\*[[:space:]]*~?([0-9]+).*/\2/p' | sed -n 1p)
+  if [[ -n "$budget" ]]; then
+    prod=0
+    while IFS=$'\t' read -r added _ file; do
+      [[ -z "$file" || "$added" == "-" ]] && continue
+      grep -qE "$TESTS_RE|$DEPS_RE|\.md$" <<< "$file" && continue
+      grep -qxF "$file" <<< "${generated%$'\n'}" && continue
+      prod=$((prod + added))
+    done < <(git diff --numstat "$BASE"...HEAD)
+    limit=$(( budget + budget * TOLERANCE / 100 ))
+    if (( prod > limit )); then
+      if [[ "$ALLOW_BUDGET" == "1" ]]; then
+        report "WARN [budget] $prod production lines, over the budget of $budget (+$TOLERANCE %), approved by the human."
+      else
+        report "FAIL [budget] $prod production lines, over the task's budget of $budget (+$TOLERANCE % = $limit). Split the task, or the human approves it (aes:budget-approved)."
+        fail=1
+      fi
+    else
+      report "INFO [budget] $prod production lines of a budget of $budget."
+    fi
+  fi
 fi
 
 if [[ $fail -eq 0 ]]; then

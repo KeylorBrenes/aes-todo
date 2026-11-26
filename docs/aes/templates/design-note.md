@@ -15,6 +15,16 @@
 - No [interface / layer / abstraction / generalization] is created for [X]: [reason]
 - [Module] is not touched: [reason]
 
+## Tests the task obliges to change
+[Each existing test that exercises a piece this task modifies, or that asserts a count or a list of something it adds (migrations, routes, catalogue keys). It goes into the change surface, or the reason it does not change (10 §5).]
+
+| Test | Why it changes / why not | In the surface |
+|---|---|---|
+
+## Commit plan
+1. [piece or criterion] + its tests
+2.
+
 ## Level 1 where it is not obvious
 [Where the logic ends and input/output begins; which dependencies are received as parameters; where this feature's data access lives.]
 
