@@ -11,6 +11,7 @@ src/server/src/http/account.rs
 src/server/src/http/session.rs
 src/server/src/http/session_cookie.rs
 src/server/tests/account.rs
+src/server/tests/health.rs
 src/web/src/App.tsx
 src/web/src/App.test.tsx
 src/web/src/CreateAccountForm.tsx
