@@ -30,7 +30,7 @@
 |---|---|
 | Comprobando | El estado «Conectando…» de EN-001 |
 | Servidor caído | El aviso y «Reintentar» de EN-001, sin cambios |
-| Sin cuenta | Encabezado «Crear la cuenta»; campos con etiqueta «Usuario», «Contraseña» y «Repetir la contraseña»; botón «Mostrar contraseña» (cambia a «Ocultar contraseña» y afecta a los dos campos de contraseña); indicador «Faltan N caracteres» / «Falta 1 carácter» mientras haya de 1 a 11, ausente con 0 o con 12 o más; botón «Crear cuenta» |
+| Sin cuenta | Encabezado «Crear la cuenta»; campos con etiqueta «Usuario», «Contraseña» y «Repetir la contraseña»; botón «Mostrar contraseña» (cambia a «Ocultar contraseña» y afecta a los dos campos de contraseña); indicador «Faltan N caracteres» / «Falta 1 carácter» mientras falten de 1 a 12 (con el campo vacío dice «Faltan 12 caracteres»), ausente con 12 o más (D-05); botón «Crear cuenta» |
 | Con cuenta y sin sesión | Texto «La cuenta ya está creada.», sin formulario |
 | Con sesión | Texto «Sesión iniciada como <usuario>» |
 
@@ -52,7 +52,12 @@
 - Nada de inicio de sesión con formulario, cierre de sesión ni límite de intentos (US-002, US-003).
 
 ## Tareas (3 como máximo, 04 §3)
-[Se completan después de la entrega de QA.]
+| ID | Resultado | Criterios que pone en verde | Superficie | Agente | Nivel de modelo |
+|---|---|---|---|---|---|
+| TASK-001 | La cuenta única se crea con su sesión y la app muestra quién está dentro (servidor completo y formulario básico) | AC-02, AC-05 (y `US-001.verify`, AC-07, que la CI corre en toda tarea con criterios) | `TASK-001.scope` | programmer | alto — seguridad y concurrencia |
+| TASK-002 | Ayudas de la contraseña, errores por campo, aviso de fallo y accesibilidad del formulario | Elemento completo (agrega AC-01, AC-03, AC-04, AC-06, AC-08) | `TASK-002.scope` | programmer | estándar |
+
+AC-07 no va en ningún `.criteria`: la CI no admite hoy un criterio comprobado solo por un comando de verificación dentro de un `.criteria` (hallazgo del harness anotado); se cubre con `US-001.verify`.
 
 **Criterios que verifican el harness:** ninguno.
 
