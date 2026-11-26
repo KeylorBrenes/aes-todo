@@ -8,7 +8,16 @@ export const texts = {
   usernameLabel: 'Usuario',
   passwordLabel: 'Contraseña',
   repeatPasswordLabel: 'Repetir la contraseña',
+  showPassword: 'Mostrar contraseña',
+  hidePassword: 'Ocultar contraseña',
+  missingOne: 'Falta 1 carácter',
+  missingMany: (count: number) => `Faltan ${count} caracteres`,
+  usernameError:
+    'El usuario debe tener de 3 a 32 caracteres: letras sin acento, números, punto, guion bajo o guion.',
+  passwordError: 'La contraseña debe tener de 12 a 128 caracteres.',
+  repeatError: 'Las contraseñas no coinciden.',
   createAccountButton: 'Crear cuenta',
+  createFailed: 'No se pudo crear la cuenta. Intentar de nuevo.',
   accountExists: 'La cuenta ya está creada.',
   signedInAs: (username: string) => `Sesión iniciada como ${username}`,
 } as const;
