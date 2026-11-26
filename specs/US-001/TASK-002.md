@@ -18,6 +18,7 @@ Solo la web: reglas de usuario y contraseña en el cliente (iguales a las del se
 ## Fuera de alcance
 - El servidor: no se toca (lo hizo TASK-001).
 - `App.tsx`, los módulos de `src/web/src/api/` y los estados «La cuenta ya está creada.» / «Sesión iniciada como …»: no se tocan.
+- En `src/web/src/App.test.tsx` solo cambia la prueba del 409 (enmienda del 2026-11-26, tras el BLOCKED del primer intento): antes de pulsar «Crear cuenta», llena los tres campos con datos válidos, para que el envío llegue a la API ahora que un formulario con errores ya no la llama. No se debilita ninguna aserción ni cambia otra prueba del archivo.
 - Validación mientras se escribe (los errores se calculan solo al pulsar «Crear cuenta»), medidor de fortaleza, sugerencias de contraseña.
 - Inicio de sesión, cierre de sesión (US-002, US-003).
 
