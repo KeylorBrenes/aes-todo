@@ -1,10 +1,13 @@
+mod account;
 mod error;
 mod health;
+mod session;
+mod session_cookie;
 
 use std::path::PathBuf;
 
 use axum::Router;
-use axum::routing::{any, get};
+use axum::routing::{any, get, post};
 use sqlx::SqlitePool;
 use tower_http::services::{ServeDir, ServeFile};
 
@@ -17,12 +20,15 @@ pub struct AppState {
     pub web_dist: PathBuf,
 }
 
-/// Construye el router: `GET /api/health`, el 404 uniforme de `/api/*` y la web compilada.
+/// Construye el router: `/api/health`, `/api/session`, `/api/account`, el 404 uniforme de
+/// `/api/*` y la web compilada.
 pub fn app(state: AppState) -> Router {
     let index = state.web_dist.join("index.html");
     let assets = ServeDir::new(&state.web_dist).fallback(ServeFile::new(index));
     let api = Router::new()
         .route("/health", get(health::health))
+        .route("/session", get(session::get_session))
+        .route("/account", post(account::create_account))
         .fallback(api_not_found)
         .method_not_allowed_fallback(api_method_not_allowed);
 
