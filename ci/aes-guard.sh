@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# AES 1.3.0 — Guardián de CI (capa L3, ver standard/05 §10 y 06 §9)
+# AES — CI guard (layer L3, see standard/05 §10 and 06 §9)
 #
-# Debe ejecutarse con la copia de este script obtenida de la rama protegida,
-# nunca con la de la rama del agente. Ver .github/workflows/aes.yml.
+# It must run with the copy of this script taken from the protected branch,
+# never with the one from the agent's branch. See .github/workflows/aes.yml.
 #
 # Variables:
-#   BASE_REF            ref confiable (por defecto origin/dev; en un hotfix, origin/main)
-#   TASK_SCOPE_FILE     ruta, dentro de BASE_REF, del .scope de la tarea
-#                       (p. ej. specs/US-005/TASK-014.scope). Un glob por línea.
-#   AES_ALLOW_MARKERS   "1" solo si un responsable distinto del programador
-#                       aprobó los marcadores (p. ej. etiqueta del PR puesta por CODEOWNER)
-#   AES_ALLOW_DEPS      "1" solo si se aprobaron cambios de dependencias
+#   BASE_REF            trusted ref (origin/dev by default; in a hotfix, origin/main)
+#   TASK_SCOPE_FILE     path, inside BASE_REF, of the task's .scope
+#                       (e.g. specs/US-005/TASK-014.scope). One glob per line.
+#   AES_ALLOW_MARKERS   "1" only if someone other than the programmer
+#                       approved the markers (e.g. a PR label put on by a CODEOWNER)
+#   AES_ALLOW_DEPS      "1" only if dependency changes were approved
 #
-# Códigos de salida: 0 = OK, 1 = violación.
+# Exit codes: 0 = OK, 1 = violation.
 set -euo pipefail
 
 BASE="${BASE_REF:-origin/dev}"
@@ -20,19 +20,19 @@ SCOPE_PATH="${TASK_SCOPE_FILE:-}"
 ALLOW_MARKERS="${AES_ALLOW_MARKERS:-0}"
 ALLOW_DEPS="${AES_ALLOW_DEPS:-0}"
 
-# Rutas que el programador nunca puede tocar. Ajustar en el perfil del proyecto.
+# Paths the programmer can never touch. Adjust in the project profile.
 PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
-# Manifiestos, lockfiles, fuentes de paquetes y herramientas locales. Cambiar la fuente o una
-# herramienta es tan sensible como cambiar un paquete (FL de nuget.config y dotnet-tools.json).
+# Manifests, lockfiles, package sources and local tools. Changing the source or a
+# tool is as sensitive as changing a package (FL of nuget.config and dotnet-tools.json).
 DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?|nuget\.config|NuGet\.Config|\.npmrc|\.yarnrc(\.yml)?|pip\.conf|global\.json|\.config/dotnet-tools\.json)$'
-# Marcadores de omisión, silenciado o errores tragados.
+# Markers of skipping, silencing or swallowed errors.
 MARKERS_RE='\.skip\(|\bxit\(|\bxdescribe\(|@Disabled|@Ignore|#\[ignore\]|pytest\.mark\.skip|Skip *= *"|eslint-disable|@ts-ignore|@ts-expect-error|#[[:space:]]*type:[[:space:]]*ignore|#pragma warning disable|noqa|nosemgrep|NOSONAR|\bTODO\b|\bFIXME\b|\bHACK\b|catch *(\([^)]*\))? *\{ *\}|except[^:]*: *pass'
 
-# Modo auxiliar de la CI (1.4.1): ¿cambió algún archivo de dependencias entre dos commits? Imprime los
-# que cambiaron (vacío = ninguno). Lo usa el workflow para conservar aes:deps-approved en un commit
-# nuevo que no toca dependencias: la aprobación sigue valiendo para lo que el humano revisó.
+# CI helper mode (1.4.1): did any dependency file change between two commits? It prints the ones
+# that changed (empty = none). The workflow uses it to keep aes:deps-approved on a new commit
+# that does not touch dependencies: the approval still holds for what the human reviewed.
 if [[ "${1:-}" == --deps-changed ]]; then
-  git diff --name-only "${2:?--deps-changed <desde> <hasta>}" "${3:?--deps-changed <desde> <hasta>}" | grep -E "$DEPS_RE" || true
+  git diff --name-only "${2:?--deps-changed <from> <to>}" "${3:?--deps-changed <from> <to>}" | grep -E "$DEPS_RE" || true
   exit 0
 fi
 
@@ -41,22 +41,22 @@ report() { printf '%s\n' "$*"; }
 
 changed=$(git diff --name-only "$BASE"...HEAD)
 if [[ -z "$changed" ]]; then
-  report "AES guard: sin cambios respecto a $BASE."
+  report "AES guard: no changes relative to $BASE."
   exit 0
 fi
 
-# 1. Rutas protegidas
+# 1. Protected paths
 protected_hits=$(grep -E "$PROTECTED_RE" <<< "$changed" || true)
 if [[ -n "$protected_hits" ]]; then
-  report "FAIL [protegidas] El diff modifica rutas protegidas:"
+  report "FAIL [protected] The diff modifies protected paths:"
   report "$protected_hits"
   fail=1
 fi
 
-# 2. Superficie de cambio (leída desde la rama protegida, no desde la del agente)
+# 2. Change surface (read from the protected branch, not from the agent's)
 if [[ -n "$SCOPE_PATH" ]]; then
   if ! scope=$(git show "$BASE:$SCOPE_PATH" 2>/dev/null); then
-    report "FAIL [superficie] No existe $SCOPE_PATH en $BASE. Publica la superficie antes de delegar."
+    report "FAIL [surface] $SCOPE_PATH does not exist in $BASE. Publish the surface before delegating."
     fail=1
   else
     while IFS= read -r file; do
@@ -65,40 +65,40 @@ if [[ -n "$SCOPE_PATH" ]]; then
       while IFS= read -r glob; do
         glob="${glob%%#*}"; glob="${glob//[[:space:]]/}"
         [[ -z "$glob" ]] && continue
-        # shellcheck disable=SC2053  # el glob debe expandirse como patrón
+        # shellcheck disable=SC2053  # the glob must expand as a pattern
         if [[ "$file" == $glob ]]; then ok=1; break; fi
       done <<< "$scope"
       if [[ $ok -eq 0 ]]; then
-        report "FAIL [superficie] Fuera de la superficie de la tarea: $file"
+        report "FAIL [surface] Outside the task's surface: $file"
         fail=1
       fi
     done <<< "$changed"
   fi
 else
-  report "WARN [superficie] TASK_SCOPE_FILE no definido; no se comprobó la superficie."
+  report "WARN [surface] TASK_SCOPE_FILE not defined; the surface was not checked."
 fi
 
-# 3. Dependencias
+# 3. Dependencies
 deps_hits=$(grep -E "$DEPS_RE" <<< "$changed" || true)
 if [[ -n "$deps_hits" && "$ALLOW_DEPS" != "1" ]]; then
-  report "FAIL [dependencias] Cambios en manifiestos/lockfiles sin aprobación:"
+  report "FAIL [dependencies] Changes in manifests/lockfiles without approval:"
   report "$deps_hits"
   fail=1
 fi
 
-# 4. Archivos de prueba eliminados
+# 4. Deleted test files
 deleted_tests=$(git diff --name-status "$BASE"...HEAD | awk '$1=="D"{print $2}' | grep -iE '(^|/)(tests?|specs?|__tests__)/|[._-](test|spec)s?\.' || true)
 if [[ -n "$deleted_tests" ]]; then
-  report "FAIL [pruebas] Se eliminaron archivos de prueba:"
+  report "FAIL [tests] Test files were deleted:"
   report "$deleted_tests"
   fail=1
 fi
 
-# 5. Marcadores de trampa en líneas añadidas.
-#    El código generado por herramientas (encabezado <auto-generated>, p. ej. migraciones de EF)
-#    se excluye: sus pragmas no los escribió el agente, y borrarlos para pasar el control es peor
-#    (FL-006). Se excluye SOLO si está en una carpeta Migrations/ Y tiene el encabezado: un encabezado
-#    puesto a mano en otro archivo no lo esconde. Los excluidos se listan para el verificador.
+# 5. Cheating markers in added lines.
+#    Tool-generated code (an <auto-generated> header, e.g. EF migrations)
+#    is excluded: the agent did not write its pragmas, and deleting them to pass the control is worse
+#    (FL-006). It is excluded ONLY if it is in a Migrations/ folder AND has the header: a header
+#    added by hand to another file does not hide it. The excluded files are listed for the verifier.
 markers=""; generated=""
 while IFS= read -r file; do
   [[ -z "$file" || ! -f "$file" ]] && continue
@@ -109,14 +109,14 @@ while IFS= read -r file; do
   [[ -n "$hits" ]] && markers+="$file:"$'\n'"$hits"$'\n'
 done <<< "$changed"
 if [[ -n "$generated" ]]; then
-  report "INFO [marcadores] Código generado excluido de la búsqueda de marcadores:"
+  report "INFO [markers] Generated code excluded from the marker search:"
   report "${generated%$'\n'}"
 fi
 if [[ -n "$markers" ]]; then
   if [[ "$ALLOW_MARKERS" == "1" ]]; then
-    report "WARN [marcadores] Marcadores presentes pero aprobados explícitamente:"
+    report "WARN [markers] Markers present but explicitly approved:"
   else
-    report "FAIL [marcadores] Omisión, silenciado o errores tragados en líneas añadidas (requiere justificación y aprobación):"
+    report "FAIL [markers] Skipping, silencing or swallowed errors in added lines (requires justification and approval):"
     fail=1
   fi
   report "${markers%$'\n'}"

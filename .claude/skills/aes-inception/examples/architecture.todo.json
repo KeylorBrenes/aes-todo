@@ -2,15 +2,15 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "To-do: esqueleto que camina (EN-001)",
+    "title": "To-do: walking skeleton (EN-001)",
     "quality_profile": "showcase",
     "viewBox": [1040, 520]
   },
   "components": [
-    { "id": "user", "type": "external", "label": "Usuario", "sublabel": "Navegador", "pos": [40, 220], "size": [150, 72] },
+    { "id": "user", "type": "external", "label": "User", "sublabel": "Browser", "pos": [40, 220], "size": [150, 72] },
     { "id": "web", "type": "frontend", "label": "Web", "sublabel": "React + Vite", "pos": [300, 220], "size": [150, 72] },
-    { "id": "api", "type": "backend", "label": "API", "sublabel": "Endpoints de tareas", "pos": [560, 220], "size": [150, 72] },
-    { "id": "db", "type": "database", "label": "Base de datos", "sublabel": "SQLite", "pos": [820, 220], "size": [150, 72] }
+    { "id": "api", "type": "backend", "label": "API", "sublabel": "Task endpoints", "pos": [560, 220], "size": [150, 72] },
+    { "id": "db", "type": "database", "label": "Database", "sublabel": "SQLite", "pos": [820, 220], "size": [150, 72] }
   ],
   "connections": [
     { "id": "user-web", "from": "user", "to": "web", "label": "HTTP" },
@@ -18,6 +18,6 @@
     { "id": "api-db", "from": "api", "to": "db", "label": "SQL" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "Qué demuestra EN-001", "items": ["La web llama a la API y muestra lo que devuelve", "La CI compila, prueba y pasa una prueba de punta a punta"] }
+    { "dot": "cyan", "title": "What EN-001 proves", "items": ["The web calls the API and shows what it returns", "CI builds, tests and passes an end-to-end test"] }
   ]
 }

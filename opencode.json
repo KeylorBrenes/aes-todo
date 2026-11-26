@@ -15,7 +15,7 @@
   },
   "agent": {
     "programmer": {
-      "description": "AES Programmer: implementa UNA tarea dentro de su superficie (rama task/<ID>/<TASK>).",
+      "description": "AES Programmer: implements ONE task inside its surface (branch task/<ID>/<TASK>).",
       "mode": "primary",
       "prompt": "{file:./.claude/agents/programmer.md}",
       "steps": 120,
@@ -57,7 +57,7 @@
       }
     },
     "mechanic": {
-      "description": "AES Mechanic: cambios mecánicos y acotados dentro de la superficie de una tarea.",
+      "description": "AES Mechanic: mechanical, bounded changes inside a task's surface.",
       "mode": "primary",
       "prompt": "{file:./.claude/agents/mechanic.md}",
       "steps": 60,
@@ -97,7 +97,7 @@
       }
     },
     "qa": {
-      "description": "AES QA: pruebas de aceptación protegidas y RED confirmado, sin conocer la implementación.",
+      "description": "AES QA: protected acceptance tests and confirmed RED, without knowing the implementation.",
       "mode": "primary",
       "prompt": "{file:./.claude/agents/qa.md}",
       "steps": 120,

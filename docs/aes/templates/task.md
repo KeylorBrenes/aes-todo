@@ -1,75 +1,75 @@
-# TASK-[NNN] — [Resultado concreto]
+# TASK-[NNN] — [Concrete result]
 
-- **Historia/Enabler/Bug/Lote:** US-[NNN]
+- **Story/Enabler/Bug/Batch:** US-[NNN]
 - **Track:** T0 / T1 / T2 / T3
-- **Estado:** Ready / In Progress / In Review / Blocked / Done
-- **Agente asignado:** programador / mecánico
-- **Nivel de modelo:** estándar / alto — [motivo] / [binding concreto, p. ej. `opencode:deepseek/deepseek-flash` o `claude:opus`] (06 §12.1)
-- **Datos que ve el rol:** solo código / [datos reales: cuáles, y si el proveedor del nivel elegido puede recibirlos] (06 §12)
-- **Riesgo:** Low / Medium / High / Critical
-- **Ciclos FAIL acumulados:** 0 / 3 (circuit breaker al llegar a 3)
+- **Status:** Ready / In Progress / In Review / Blocked / Done
+- **Assigned agent:** programmer / mechanic
+- **Model level:** standard / high — [reason] / [a concrete binding, e.g. `opencode:deepseek/deepseek-flash` or `claude:opus`] (06 §12.1)
+- **Data the role sees:** code only / [real data: which, and whether the provider of the chosen level may receive it] (06 §12)
+- **Risk:** Low / Medium / High / Critical
+- **Accumulated FAIL cycles:** 0 / 3 (circuit breaker on reaching 3)
 
-## Objetivo y resultado esperado
-[Un resultado principal, observable.]
+## Goal and expected result
+[One main, observable result.]
 
-## Alcance
-[Qué sí debe cambiar.]
+## Scope
+[What must change.]
 
-## Fuera de alcance
-[Qué no debe cambiar. Obligatorio y no vacío en T2/T3. Nombrar funcionalidades cercanas que podrían implementarse «por conveniencia».]
+## Out of scope
+[What must not change. Mandatory and non-empty in T2/T3. Name nearby features that could be implemented "for convenience".]
 
-## Criterios que deja en verde
-[IDs de criterio o de defecto. Se publican en la rama protegida como `specs/US-[NNN]/TASK-[NNN].criteria`, uno por línea (`AC-03`, `BUG-012`). La CI de la tarea ejecuta solo esos más la regresión. La **última** tarea del elemento no lleva este archivo: ejecuta el elemento completo. Un criterio verificado por regresión de otra historia (caracterización) no se lista.]
+## Criteria it turns green
+[Criterion or defect IDs. Published on the protected branch as `specs/US-[NNN]/TASK-[NNN].criteria`, one per line (`AC-03`, `BUG-012`). The task's CI runs only those plus the regression suite. The item's **last** task has no such file: it runs the whole item. A criterion verified by another story's regression (characterization) is not listed.]
 
-## Contexto técnico
-[Componentes, archivos conocidos, convenciones, ADRs.]
+## Technical context
+[Components, known files, conventions, ADRs.]
 
-## Superficie de cambio
-Publicada en la rama protegida como `specs/US-[NNN]/TASK-[NNN].scope` (un glob por línea). Cualquier archivo fuera de esta lista hace fallar la CI.
+## Change surface
+Published on the protected branch as `specs/US-[NNN]/TASK-[NNN].scope` (one glob per line). Any file outside this list makes CI fail.
 
 ```
-src/[modulo]/**
-tests/unit/[modulo]/**
+src/[module]/**
+tests/unit/[module]/**
 ```
 
-## Restricciones y permisos
-[Rutas protegidas adicionales, dependencias autorizadas, operaciones que requieren aprobación.]
+## Constraints and permissions
+[Additional protected paths, authorized dependencies, operations that require approval.]
 
-## Nota de diseño
-[T2/T3: copia o enlace a la nota (plantilla `design-note.md`). El programador no añade patrones, abstracciones ni piezas que la nota no contemple.]
+## Design note
+[T2/T3: a copy of or link to the note (template `design-note.md`). The programmer adds no patterns, abstractions or pieces the note does not contemplate.]
 
-## Estados que introduce
-[Si la tarea crea un estado (error, carga, edición, confirmación): qué lo crea y qué transiciones lo limpian. Omitir si no aplica.]
+## States it introduces
+[If the task creates a state (error, loading, editing, confirmation): what creates it and which transitions clear it. Omit if not applicable.]
 
-## Dependencias
+## Dependencies
 
-## Comandos de validación exactos
+## Exact validation commands
 ```
-[comando de pruebas unitarias del módulo]
-[comando de pruebas de aceptación filtrado por US-NNN]
+[the module's unit test command]
+[acceptance test command filtered by US-NNN]
 [lint] && [typecheck]
 ```
 
-## Pruebas de regresión afectadas (test map)
-[Archivos de prueba existentes que este cambio puede romper.]
+## Affected regression tests (test map)
+[Existing test files this change could break.]
 
-## Presupuesto de diff orientativo
-- Producción: ~N líneas
-- Pruebas: ~M líneas
-[El desvío que exige justificación es el de producción.]
+## Indicative diff budget
+- Production: ~N lines
+- Tests: ~M lines
+[The deviation that requires justification is the production one.]
 
-## Condición de finalización
-[Qué evidencia permite pasar a revisión.]
+## Completion condition
+[Which evidence allows moving to review.]
 
-## Reporte de ejecución
-- Baseline inicial (pruebas que ya fallaban):
-- Cambios realizados:
+## Execution report
+- Initial baseline (tests that were already failing):
+- Changes made:
 - Commits (`struct:` / `feat:` / `fix:` / `test:`):
-- Pruebas ejecutadas y resultados (salida capturada, no resumen):
-- Comandos y entorno:
-- Alertas del guardián de CI y su justificación:
-- Supuestos/decisiones:
-- Desviaciones/bloqueos:
-- Riesgos pendientes:
-- Entorno limpio al terminar (sin servidores ni procesos del rol):
-- Referencia del diff/commit:
+- Tests run and results (captured output, not a summary):
+- Commands and environment:
+- CI guard alerts and their justification:
+- Assumptions/decisions:
+- Deviations/blocks:
+- Pending risks:
+- Clean environment at the end (no servers or processes left by the role):
+- Diff/commit reference:

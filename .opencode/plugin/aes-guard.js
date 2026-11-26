@@ -1,11 +1,11 @@
-// AES 1.4.0 — Capa L2 para los roles que corren en OpenCode (standard/06 §9, §12).
+// AES — Layer L2 for the roles that run in OpenCode (standard/06 §9, §12).
 //
-// No duplica reglas: traduce cada herramienta de OpenCode al formato de hook de Claude Code y llama
-// a los mismos scripts (.claude/hooks/role-guard.sh y bash-guard.sh). Si el script bloquea (código 2),
-// la herramienta falla con su mensaje y el modelo lo recibe, igual que con un hook de Claude Code.
+// It does not duplicate rules: it translates each OpenCode tool into Claude Code's hook format and calls
+// the same scripts (.claude/hooks/role-guard.sh and bash-guard.sh). If the script blocks (exit code 2),
+// the tool fails with its message and the model receives it, just as with a Claude Code hook.
 //
-// El rol llega en AES_ROLE, que pone .claude/scripts/aes-oc.sh. Sin AES_ROLE (OpenCode usado a mano,
-// fuera de AES) el plugin no hace nada.
+// The role arrives in AES_ROLE, set by .claude/scripts/aes-oc.sh. Without AES_ROLE (OpenCode used by hand,
+// outside AES) the plugin does nothing.
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
@@ -21,14 +21,14 @@ export const AesGuard = async ({ directory, worktree }) => {
   const runHook = (script, input) => {
     const file = path.join(hooks, script);
     if (!fs.existsSync(file)) {
-      throw new Error(`AES (${role}): falta ${path.relative(root, file)}; no se puede comprobar la acción. Reporta BLOCKED.`);
+      throw new Error(`AES (${role}): ${path.relative(root, file)} is missing; the action cannot be checked. Report BLOCKED.`);
     }
     const r = spawnSync(bash, [file], { input: JSON.stringify(input), cwd: root, encoding: "utf8" });
-    if (r.error) throw new Error(`AES (${role}): no se pudo ejecutar ${script} (${r.error.message}). Reporta BLOCKED.`);
-    if (r.status === 2) throw new Error((r.stderr || "").trim() || `AES (${role}): acción bloqueada.`);
+    if (r.error) throw new Error(`AES (${role}): could not run ${script} (${r.error.message}). Report BLOCKED.`);
+    if (r.status === 2) throw new Error((r.stderr || "").trim() || `AES (${role}): action blocked.`);
   };
 
-  // Rutas que tocan las herramientas de archivos (una o varias, según la herramienta).
+  // Paths the file tools touch (one or several, depending on the tool).
   const filesOf = (tool, args) => {
     if (args.filePath || args.file_path || args.path) return [args.filePath || args.file_path || args.path];
     const text = String(args.patchText || args.patch || "");
@@ -52,7 +52,7 @@ export const AesGuard = async ({ directory, worktree }) => {
         runHook("bash-guard.sh", { ...base, tool_name: "Bash", tool_input: { command: String(args.command || "") } });
       }
     },
-    // Los procesos que lance el agente no heredan credenciales de GitHub ni de la app de AES.
+    // Processes the agent launches do not inherit GitHub or AES app credentials.
     "shell.env": async (_input, output) => {
       if (!role) return;
       for (const k of Object.keys(output.env)) {

@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# AES — Genera (o reutiliza) un token de instalación de la GitHub App de los agentes.
+# AES — Generates (or reuses) an installation token of the agents' GitHub App.
 #
-# El token dura 1 hora. Se guarda en caché y se renueva cuando le quedan menos de 5 minutos.
-# Requiere: bash, openssl, curl, jq (todos vienen con Git for Windows salvo jq).
+# The token lasts 1 hour. It is cached and renewed when less than 5 minutes are left.
+# Requires: bash, openssl, curl, jq (all come with Git for Windows except jq).
 #
 # Variables:
-#   AES_APP_ID               ID numérico de la app (página General de la app → "App ID")
-#   AES_APP_INSTALLATION_ID  ID de la instalación (URL .../settings/installations/<id>)
-#   AES_APP_PRIVATE_KEY      ruta al .pem, con barras normales: C:/Users/<tú>/.aes/aes-agent.pem
-# Dentro de Claude Code llegan por el bloque "env" de .claude/settings.local.json (que NO va a git).
-# Desde cualquier otra terminal, si no están definidas, se leen de ese mismo archivo.
+#   AES_APP_ID               the app's numeric ID (the app's General page → "App ID")
+#   AES_APP_INSTALLATION_ID  the installation's ID (URL .../settings/installations/<id>)
+#   AES_APP_PRIVATE_KEY      path to the .pem, with forward slashes: C:/Users/<you>/.aes/aes-agent.pem
+# Inside Claude Code they arrive through the "env" block of .claude/settings.local.json (which does NOT go to git).
+# From any other terminal, if they are not defined, they are read from that same file.
 #
-# Uso: token=$(bash .claude/scripts/gh-app-token.sh)
-#      bash .claude/scripts/gh-app-token.sh --permissions   permisos del token (JSON), p. ej. para ver
-#                                                        si la app tiene "workflows": "write"
+# Usage: token=$(bash .claude/scripts/gh-app-token.sh)
+#        bash .claude/scripts/gh-app-token.sh --permissions   the token's permissions (JSON), e.g. to see
+#                                                          whether the app has "workflows": "write"
 set -euo pipefail
 want_perms=0; [[ "${1:-}" == --permissions ]] && want_perms=1
 
@@ -29,10 +29,10 @@ if [[ -z "${AES_APP_ID:-}" || -z "${AES_APP_INSTALLATION_ID:-}" || -z "${AES_APP
   fi
 fi
 
-: "${AES_APP_ID:?Falta AES_APP_ID (defínela o configúrala en .claude/settings.local.json)}"
-: "${AES_APP_INSTALLATION_ID:?Falta AES_APP_INSTALLATION_ID}"
-: "${AES_APP_PRIVATE_KEY:?Falta AES_APP_PRIVATE_KEY}"
-[[ -r "$AES_APP_PRIVATE_KEY" ]] || { echo "No se puede leer la llave: $AES_APP_PRIVATE_KEY" >&2; exit 1; }
+: "${AES_APP_ID:?AES_APP_ID is missing (define it or set it in .claude/settings.local.json)}"
+: "${AES_APP_INSTALLATION_ID:?AES_APP_INSTALLATION_ID is missing}"
+: "${AES_APP_PRIVATE_KEY:?AES_APP_PRIVATE_KEY is missing}"
+[[ -r "$AES_APP_PRIVATE_KEY" ]] || { echo "Cannot read the key: $AES_APP_PRIVATE_KEY" >&2; exit 1; }
 
 cache_dir="${AES_TOKEN_CACHE_DIR:-$HOME/.aes}"
 cache="$cache_dir/token-${AES_APP_INSTALLATION_ID}.json"
@@ -41,13 +41,13 @@ chmod 700 "$cache_dir" 2>/dev/null || true
 
 now=$(date +%s)
 
-# 1. Reutilizar el token en caché si le quedan más de 5 minutos.
+# 1. Reuse the cached token if more than 5 minutes are left.
 if [[ -s "$cache" ]]; then
   expires_at=$(jq -r '.expires_at // empty' "$cache" 2>/dev/null || true)
   if [[ -n "$expires_at" ]]; then
-    # jq en lugar de date -d: funciona igual en Linux, macOS y Git Bash.
+    # jq instead of date -d: it works the same on Linux, macOS and Git Bash.
     exp_epoch=$(jq -rn --arg t "$expires_at" '$t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601' 2>/dev/null || echo 0)
-    # Con --permissions, una caché anterior a 1.4.1 (sin permisos) no sirve: se renueva.
+    # With --permissions, a cache older than 1.4.1 (without permissions) is no use: it is renewed.
     if (( exp_epoch - now > 300 )) && { (( ! want_perms )) || jq -e '.permissions' "$cache" >/dev/null 2>&1; }; then
       if (( want_perms )); then jq '.permissions' "$cache"; else jq -r '.token' "$cache"; fi
       exit 0
@@ -55,14 +55,14 @@ if [[ -s "$cache" ]]; then
   fi
 fi
 
-# 2. Firmar un JWT (RS256) con la llave privada de la app. Válido 9 minutos.
+# 2. Sign a JWT (RS256) with the app's private key. Valid for 9 minutes.
 b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
 header=$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)
 payload=$(printf '{"iat":%d,"exp":%d,"iss":"%s"}' "$((now - 60))" "$((now + 540))" "$AES_APP_ID" | b64url)
 signature=$(printf '%s.%s' "$header" "$payload" | openssl dgst -sha256 -sign "$AES_APP_PRIVATE_KEY" | b64url)
 jwt="$header.$payload.$signature"
 
-# 3. Cambiar el JWT por un token de instalación.
+# 3. Exchange the JWT for an installation token.
 response=$(curl -sS -X POST \
   -H "Authorization: Bearer $jwt" \
   -H "Accept: application/vnd.github+json" \
@@ -71,7 +71,7 @@ response=$(curl -sS -X POST \
 
 token=$(jq -r '.token // empty' <<< "$response")
 if [[ -z "$token" ]]; then
-  echo "GitHub no devolvió un token: $(jq -r '.message // .' <<< "$response")" >&2
+  echo "GitHub did not return a token: $(jq -r '.message // .' <<< "$response")" >&2
   exit 1
 fi
 

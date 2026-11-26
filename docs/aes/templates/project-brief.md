@@ -1,39 +1,39 @@
-# Project Brief — [Nombre]
+# Project brief — [Name]
 
-## Problema y oportunidad
-[Qué problema se resuelve y evidencia/contexto disponible.]
+## Problem and opportunity
+[Which problem is solved and the available evidence/context.]
 
-## Usuarios y actores
-[Usuarios principales, administradores, sistemas externos.]
+## Users and actors
+[Main users, administrators, external systems.]
 
-## Objetivos y señales de éxito
-[Resultados observables; no confundirlos con una lista de funcionalidades.]
+## Goals and signals of success
+[Observable results; do not confuse them with a list of features.]
 
-## Alcance inicial
-[Qué se busca incluir en el primer horizonte.]
+## Initial scope
+[What is meant to be included in the first horizon.]
 
-## Fuera de alcance
-[Qué no se busca resolver ahora.]
+## Out of scope
+[What is not meant to be solved now.]
 
-## Releases previstos
-| Release | Objetivo (lo que el usuario ya puede hacer) | Epics que toca |
+## Planned releases
+| Release | Goal (what the user can already do) | Epics it touches |
 |---|---|---|
 | REL-001 | | |
 
-El detalle (qué historias entran) está en `docs/backlog.md`.
+The detail (which stories go in) is in `docs/backlog.md`.
 
-## Restricciones
-[Normativas, técnicas, presupuesto, plazo, privacidad, integración, operación.]
+## Constraints
+[Regulatory, technical, budget, deadline, privacy, integration, operation.]
 
-## Supuestos e incertidumbres («por definir»)
-| Elemento | Tipo (supuesto/incertidumbre) | Impacto | Cómo y cuándo se resuelve (pregunta, Spike, historia) |
+## Assumptions and uncertainties ("to be defined")
+| Item | Type (assumption/uncertainty) | Impact | How and when it is resolved (question, Spike, story) |
 |---|---|---|---|
 
-## Riesgos iniciales
-| Riesgo | Probabilidad/impacto | Mitigación o investigación |
+## Initial risks
+| Risk | Probability/impact | Mitigation or research |
 |---|---|---|
 
-## Aprobaciones
-- Responsable del producto:
-- PR de incepción (o de la última mini-incepción):
-- Fecha/versión aprobada:
+## Approvals
+- Product owner:
+- Inception PR (or the latest mini-inception's):
+- Approved date/version:

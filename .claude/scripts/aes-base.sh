@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# AES 1.3.0 — Imprime la rama base protegida de la rama actual: origin/dev o, en un hotfix,
-# origin/main (standard/07 §9). La distingue por dónde está publicada la especificación del
-# elemento: en dev para el trabajo normal, en main para un hotfix.
-# Uso: base=$(bash .claude/scripts/aes-base.sh)
+# AES — Prints the protected base branch of the current branch: origin/dev or, in a hotfix,
+# origin/main (standard/07 §9). It tells them apart by where the item's specification is
+# published: in dev for normal work, in main for a hotfix.
+# Usage: base=$(bash .claude/scripts/aes-base.sh)
 set -uo pipefail
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 item=""

@@ -1,43 +1,43 @@
-# Nota de diseño — [US-NNN] / [TASK-NNN]
+# Design note — [US-NNN] / [TASK-NNN]
 
-[La escribe el orquestador (10 §5) a partir de hechos: historia, contrato de interfaz, ADRs, `docs/design-catalog.md` y el resumen estructural generado por herramienta. Va dentro de la especificación de la tarea.]
+[Written by the orchestrator (10 §5) from facts: the story, the interface contract, the ADRs, `docs/design-catalog.md` and the tool-generated structural outline. It goes inside the task's specification.]
 
-## Piezas
-| Pieza (archivo / tipo / función) | Nueva o existente | Responsabilidad (una) |
+## Pieces
+| Piece (file / type / function) | New or existing | Responsibility (one) |
 |---|---|---|
 | | | |
 
-## Patrón (nivel 2)
-- **Se usa:** [patrón] — razón presente: [variantes reales, historias del backlog o ADR]
-- o **Ninguno**: [por qué basta con código directo]
+## Pattern (level 2)
+- **Used:** [pattern] — present reason: [real variants, backlog stories or ADR]
+- or **None**: [why direct code is enough]
 
-## Lo que no se hace
-- No se crea [interfaz / capa / abstracción / generalización] para [X]: [motivo]
-- No se toca [módulo]: [motivo]
+## What is not done
+- No [interface / layer / abstraction / generalization] is created for [X]: [reason]
+- [Module] is not touched: [reason]
 
-## Nivel 1 donde no es obvio
-[Dónde termina la lógica y empieza la entrada/salida; qué dependencias se reciben por parámetro; dónde vive el acceso a datos de esta funcionalidad.]
+## Level 1 where it is not obvious
+[Where the logic ends and input/output begins; which dependencies are received as parameters; where this feature's data access lives.]
 
-## Bordes de la API (solo si la tarea añade o cambia rutas)
-[Lo que el framework decide por defecto y el contrato debe fijar. Una fila por prefijo o ruta nueva.]
+## API edges (only if the task adds or changes routes)
+[What the framework decides by default and the contract must fix. One row per new prefix or route.]
 
-| Ruta o prefijo | Método no permitido | Ruta desconocida y barra final | Cuerpo de error | Qué lo cubre (fallback, middleware) |
+| Route or prefix | Method not allowed | Unknown route and trailing slash | Error body | What covers it (fallback, middleware) |
 |---|---|---|---|---|
-| | [405 + cuerpo uniforme] | [404 + cuerpo uniforme; `/prefijo/` incluido] | [forma del contrato] | |
+| | [405 + uniform body] | [404 + uniform body; `/prefix/` included] | [contract shape] | |
 
-## Comportamiento dinámico de la interfaz (solo si la tarea tiene UI)
-[El verificador comprueba esto con teclado, lector de pantalla y ratón. Lo que no se diga aquí lo decidirá el programador, y cada diferencia con lo esperado será un ciclo FAIL.]
+## Dynamic behaviour of the interface (only if the task has UI)
+[The verifier checks this with keyboard, screen reader and mouse. What is not stated here the programmer will decide, and each difference from what is expected will be a FAIL cycle.]
 
-| Transición de estado (qué la causa) | Dónde queda el foco | Qué se anuncia y en qué región viva | Anillo de foco visible |
+| State transition (what causes it) | Where focus goes | What is announced and in which live region | Visible focus ring |
 |---|---|---|---|
-| [carga inicial] | | | |
-| [acción con éxito] | [control / elemento de estado con `tabIndex={-1}` / no se mueve] | | [sí con teclado y ratón / solo con teclado (`:focus-visible`) / no: elemento no interactivo] |
-| [acción con error] | | | |
+| [initial load] | | | |
+| [successful action] | [control / status element with `tabIndex={-1}` / does not move] | | [yes with keyboard and mouse / keyboard only (`:focus-visible`) / no: non-interactive element] |
+| [failed action] | | | |
 
-- **Regiones vivas:** [cuáles están siempre montadas desde la carga y cuáles se insertan; una sola `role="status"` por región; un `alert` no contiene controles].
-- **Anillo por tipo de elemento** según `DESIGN.md`: [controles / elementos de estado enfocados por programa].
-- **Espacio reservado:** [si un mensaje aparece y desaparece, si ocupa espacio cuando está vacío].
-- **Respuestas que la prueba técnica debe cubrir:** [éxito, error del servidor, red caída, éxito con cuerpo inesperado o no JSON].
+- **Live regions:** [which are mounted from page load and which are inserted; a single `role="status"` per region; an `alert` contains no controls].
+- **Focus ring by element type** according to `DESIGN.md`: [controls / status elements focused programmatically].
+- **Reserved space:** [if a message appears and disappears, whether it takes up space when empty].
+- **Responses the technical tests must cover:** [success, server error, network down, success with an unexpected or non-JSON body].
 
-## ¿Cambia el catálogo de diseño?
-No / Sí: [qué se añade en el cierre]
+## Does the design catalogue change?
+No / Yes: [what is added at close]

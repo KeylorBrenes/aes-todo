@@ -1,32 +1,32 @@
-# ST-[NNN] — Lote de estabilización tras [US-NNN]
+# ST-[NNN] — Stabilization batch after [US-NNN]
 
-- **Track:** T1 (camino corto, 04 §10)
-- **Estado:** Draft / Ready / In Progress / In Review / Accepted
-- **Motivo:** la compuerta de estabilización está cerrada (02 §9.2)
-- **Sesión:** una sola sesión del orquestador para todo el lote, sin funcionalidad nueva
+- **Track:** T1 (short path, 04 §10)
+- **Status:** Draft / Ready / In Progress / In Review / Accepted
+- **Reason:** the stabilization gate is closed (02 §9.2)
+- **Session:** a single orchestrator session for the whole batch, with no new functionality
 
-## Defectos del lote
-| Defecto | Severidad | Historia de origen | Criterio (comportamiento correcto) | Comprobación | RED |
+## Defects in the batch
+| Defect | Severity | Story of origin | Criterion (correct behaviour) | Check | RED |
 |---|---|---|---|---|---|
-| BUG-[NNN] | | US-[NNN] | | `@BUG-[NNN]` / `.verify` | confirmado / sin RED (aprobado) |
+| BUG-[NNN] | | US-[NNN] | | `@BUG-[NNN]` / `.verify` | confirmed / no RED (approved) |
 
-## Fuera de alcance
-[Funcionalidad nueva, refactorizaciones no necesarias para los arreglos, defectos no listados arriba.]
+## Out of scope
+[New functionality, refactorings not needed for the fixes, defects not listed above.]
 
-## Tareas
-[Agrupadas por superficie de cambio. Cada una declara los defectos que deja en verde en su `.criteria` (`BUG-NNN` por línea).]
+## Tasks
+[Grouped by change surface. Each one declares the defects it turns green in its `.criteria` (`BUG-NNN` per line).]
 
-| ID | Defectos | Superficie | Estado |
+| ID | Defects | Surface | Status |
 |---|---|---|---|
 
-## Decisiones
-| ID | Pregunta | Opciones | Decisión | Quién y fecha | Impacto |
+## Decisions
+| ID | Question | Options | Decision | Who and when | Impact |
 |---|---|---|---|---|---|
 
-## Cierre
-- Defectos corregidos (comprobación en verde en CI y verificador):
-- Defectos que siguen abiertos y motivo:
-- Comprobaciones añadidas a la regresión:
-- Defectos nuevos encontrados (con severidad):
-- Compuerta tras el lote: abierta / cerrada
-- Aceptación humana:
+## Close
+- Defects fixed (check green in CI and verifier):
+- Defects still open and why:
+- Checks added to the regression suite:
+- New defects found (with severity):
+- Gate after the batch: open / closed
+- Human acceptance:

@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
-# AES 1.3.0 — Compuerta de estabilización (standard/02 §9.2), capa L3.
+# AES — Stabilization gate (standard/02 §9.2), layer L3.
 #
-# Lee el backlog DESDE LA BASE (no desde la rama) y decide si el elemento puede avanzar.
-# La tabla del backlog debe tener columnas «ID», «Severidad» y «Estado» (en cualquier orden).
-# Solo cuentan las filas con severidad (los defectos). Abierto = Estado distinto de Accepted/Rejected.
+# Reads the backlog FROM THE BASE (not from the branch) and decides whether the item can advance.
+# The backlog table must have the columns "ID", "Severity" and "Status" (in any order; the Spanish
+# "Severidad" and "Estado" work too). Only rows with a severity count (the defects).
+# Open = Status other than Accepted/Rejected/Released.
 #
-# Uso: defect-gate.sh <fase> <ID-elemento>
-#   start  el elemento va a pasar a Ready (rama qa/<ID>): bloquean Crítica, Alta, Media y
-#          Menores por encima del límite
-#   work   el elemento está en curso (ramas task/<ID>/*): solo bloquea Crítica
-#   release  PR de dev a main (standard/07 §8): mismas reglas que start, sin exenciones;
-#            lee el backlog de BASE (en un release, el candidato: HEAD)
-#   report solo informa (push a main)
+# Usage: defect-gate.sh <phase> <item-ID>
+#   start  the item is about to move to Ready (branch qa/<ID>): Critical, High, Medium and
+#          Minor above the limit block
+#   work   the item is in progress (branches task/<ID>/*): only Critical blocks
+#   release  PR from dev to main (standard/07 §8): the same rules as start, with no exemptions;
+#            it reads the backlog from BASE (in a release, the candidate: HEAD)
+#   report only reports (push to main)
 #
 # Variables:
-#   BASE                ref protegida (por defecto origin/dev)
-#   AES_BACKLOG         ruta del backlog en la base (por defecto docs/backlog.md)
-#   AES_MINOR_LIMIT     máximo de defectos Menores abiertos (por defecto 5)
-#   AES_GATE_EXEMPT     prefijos que no pasan por la compuerta, separados por espacio:
-#                       los elementos que corrigen o mantienen (por defecto "BUG ST CH SP")
+#   BASE                protected ref (origin/dev by default)
+#   AES_BACKLOG         path of the backlog in the base (docs/backlog.md by default)
+#   AES_MINOR_LIMIT     maximum open Minor defects (5 by default)
+#   AES_GATE_EXEMPT     prefixes that do not go through the gate, space-separated:
+#                       the items that fix or maintain ("BUG ST CH SP" by default)
 #
-# Salida: 0 = puede avanzar, 1 = compuerta cerrada, 2 = error de uso o de formato.
+# Exit: 0 = it can advance, 1 = gate closed, 2 = usage or format error.
 set -euo pipefail
 
 phase="${1:-}"; item="${2:-}"
@@ -29,20 +30,20 @@ BACKLOG="${AES_BACKLOG:-docs/backlog.md}"
 LIMIT="${AES_MINOR_LIMIT:-5}"
 EXEMPT="${AES_GATE_EXEMPT:-BUG ST CH SP}"
 
-case "$phase" in start|work|release|report) ;; *) echo "Uso: defect-gate.sh start|work|release|report <ID>" >&2; exit 2 ;; esac
+case "$phase" in start|work|release|report) ;; *) echo "Usage: defect-gate.sh start|work|release|report <ID>" >&2; exit 2 ;; esac
 
 prefix="${item%%-*}"
 if [[ "$phase" =~ ^(start|work)$ && -n "$item" ]] && [[ " $EXEMPT " == *" $prefix "* ]]; then
-  echo "AES defect-gate: $item corrige o mantiene ($prefix): no pasa por la compuerta."
+  echo "AES defect-gate: $item fixes or maintains ($prefix): it does not go through the gate."
   exit 0
 fi
 
 if ! content=$(git show "$BASE:$BACKLOG" 2>/dev/null); then
-  echo "AES defect-gate: no existe $BACKLOG en $BASE; no hay defectos que evaluar."
+  echo "AES defect-gate: $BACKLOG does not exist in $BASE; there are no defects to evaluate."
   exit 0
 fi
 
-# Extrae «ID<TAB>severidad<TAB>estado» de cada fila con severidad, ubicando las columnas por su encabezado.
+# Extracts "ID<TAB>severity<TAB>status" from each row with a severity, locating the columns by their header.
 rows=$(awk -F'|' '
   function trim(s) { gsub(/^[ \t`*]+|[ \t`*]+$/, "", s); return s }
   /^\|/ {
@@ -57,12 +58,12 @@ rows=$(awk -F'|' '
       if (id && sev && st) { hdr = 1; skip = 1 }
       next
     }
-    if (skip) { skip = 0; next }   # fila separadora |---|
+    if (skip) { skip = 0; next }   # separator row |---|
     s = trim($sev)
     if (s != "" && s != "—" && s != "-") print trim($id) "\t" s "\t" trim($st)
     next
   }
-  { if (hdr) hdr = 0 }            # la tabla terminó
+  { if (hdr) hdr = 0 }            # the table ended
 ' <<< "$content")
 
 norm() { tr '[:upper:]' '[:lower:]' <<< "$1" | sed 's/í/i/g; s/á/a/g'; }
@@ -71,41 +72,41 @@ declare -a crit high med minor
 crit=(); high=(); med=(); minor=()
 while IFS=$'\t' read -r id sev st; do
   [[ -z "$id" ]] && continue
-  case "$(norm "$st")" in accepted|rejected) continue ;; esac
+  case "$(norm "$st")" in accepted|rejected|released) continue ;; esac
   case "$(norm "$sev")" in
     critica|critical) crit+=("$id") ;;
     alta|high)        high+=("$id") ;;
     media|medium)     med+=("$id") ;;
     menor|minor|baja|low) minor+=("$id") ;;
-    *) echo "AES defect-gate: severidad desconocida «$sev» en $id (usa Crítica, Alta, Media o Menor)." >&2; exit 2 ;;
+    *) echo "AES defect-gate: unknown severity \"$sev\" in $id (use Critical, High, Medium or Minor)." >&2; exit 2 ;;
   esac
 done <<< "$rows"
 
-echo "AES defect-gate ($phase${item:+, $item}) — defectos abiertos en $BASE:$BACKLOG"
-echo "  Crítica: ${#crit[@]} ${crit[*]:-}"
-echo "  Alta:    ${#high[@]} ${high[*]:-}"
-echo "  Media:   ${#med[@]} ${med[*]:-}"
-echo "  Menor:   ${#minor[@]} ${minor[*]:-} (límite $LIMIT)"
+echo "AES defect-gate ($phase${item:+, $item}) — open defects in $BASE:$BACKLOG"
+echo "  Critical: ${#crit[@]} ${crit[*]:-}"
+echo "  High:     ${#high[@]} ${high[*]:-}"
+echo "  Medium:   ${#med[@]} ${med[*]:-}"
+echo "  Minor:    ${#minor[@]} ${minor[*]:-} (limit $LIMIT)"
 
 closed=0
 case "$phase" in
   start|release)
     if (( ${#crit[@]} + ${#high[@]} + ${#med[@]} > 0 )); then
       if [[ "$phase" == "release" ]]; then
-        echo "::error::No se puede liberar: hay defectos Críticos, Altos o Medios abiertos (AES 02 §9.2, 07 §8)."
+        echo "::error::Cannot release: there are open Critical, High or Medium defects (AES 02 §9.2, 07 §8)."
       else
-        echo "::error::Compuerta de estabilización cerrada: hay defectos Críticos, Altos o Medios abiertos. Corrígelos en un lote de estabilización antes de pasar $item a Ready (AES 02 §9)."
+        echo "::error::Stabilization gate closed: there are open Critical, High or Medium defects. Fix them in a stabilization batch before moving $item to Ready (AES 02 §9)."
       fi
       closed=1
     fi
     if (( ${#minor[@]} > LIMIT )); then
-      echo "::error::Compuerta de estabilización cerrada: ${#minor[@]} defectos Menores abiertos (límite $LIMIT)."
+      echo "::error::Stabilization gate closed: ${#minor[@]} open Minor defects (limit $LIMIT)."
       closed=1
     fi
     ;;
   work)
     if (( ${#crit[@]} > 0 )); then
-      echo "::error::Hay un defecto Crítico abierto: se detiene todo el trabajo salvo su corrección (AES 02 §9.2)."
+      echo "::error::There is an open Critical defect: all work stops except its fix (AES 02 §9.2)."
       closed=1
     fi
     ;;

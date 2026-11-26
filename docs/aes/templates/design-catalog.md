@@ -1,19 +1,19 @@
-# Catálogo de diseño — [Proyecto]
+# Design catalogue — [Project]
 
-Memoria de diseño del proyecto (10 §6). Lo consulta el orquestador antes de cada nota de diseño y lo actualiza en el cierre de cada elemento.
+The project's design memory (10 §6). The orchestrator reads it before each design note and updates it when each item closes.
 
-## Patrones en uso (nivel 2)
-| Patrón | Dónde | Razón presente | Desde (elemento / ADR) |
+## Patterns in use (level 2)
+| Pattern | Where | Present reason | Since (item / ADR) |
 |---|---|---|---|
 
-## Decidido no usar
-| Patrón o abstracción | Motivo | Señal que haría reconsiderarlo | Desde |
+## Decided not to use
+| Pattern or abstraction | Reason | Signal that would make us reconsider | Since |
 |---|---|---|---|
-| | | p. ej. «una segunda fuente de datos para gastos» | |
+| | | e.g. "a second data source for expenses" | |
 
-## Cómo se aplica el nivel 1 en este proyecto
-[Convenciones concretas: dónde vive el acceso a datos por funcionalidad, cómo se separa la lógica de la entrada/salida, cómo se inyectan dependencias en el stack.]
+## How level 1 is applied in this project
+[Concrete conventions: where data access lives per feature, how logic is separated from input/output, how dependencies are injected in the stack.]
 
-## Reglas del nivel 1 cubiertas por la CI
-| Regla | Herramienta y configuración |
+## Level-1 rules covered by CI
+| Rule | Tool and configuration |
 |---|---|

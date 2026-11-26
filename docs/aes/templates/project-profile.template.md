@@ -1,147 +1,149 @@
-# Project Profile — [Nombre del proyecto]
+# Project profile — [Project name]
 
-- **AES version:** 1.2.0
-- **Product owner / aprobador humano:** [rol/persona]
-- **Repositorio:** [URL]
-- **Ramas (07 §7):** `main` (liberado) y `dev` (integrado), ambas protegidas; ramas de trabajo cortas desde `dev`, hotfixes desde `main`
-- **Release:** quién aprueba, cómo se marca la versión (p. ej. tag `vX.Y.Z`), dónde se publican las notas (`docs/releases/`)
-- **Copia local de DoR/DoD:** [p. ej. `docs/aes/08-definition-of-ready-and-done.md`, de AES 1.2.0]
+- **AES version:** 2.0.0
+- **Project language (`AES_LANG`):** en / es — language of the project's artifacts (stories, plans, reports, backlog, board)
+- **Product owner / human approver:** [role/person]
+- **Repository:** [URL]
+- **Branches (07 §7):** `main` (released) and `dev` (integrated), both protected; short work branches from `dev`, hotfixes from `main`
+- **Release:** who approves, how the version is marked (e.g. tag `vX.Y.Z`), where the notes are published (`docs/releases/`)
+- **Local copy of the DoR/DoD:** [e.g. `docs/aes/08-definition-of-ready-and-done.md`, from AES 2.0.0]
 
-## Roles: harness y modelo
-El modelo real de cada ejecución se registra en las métricas (09 §6); si difiere de esta tabla, se anota.
+## Roles: harness and model
+The actual model of each run is recorded in the metrics (09 §6); if it differs from this table, it is noted.
 
-| Rol | Harness | Modelo | Invocación | Identidad con la que publica | Proveedor y condiciones de datos (06 §12) |
+| Role | Harness | Model | Invocation | Identity it publishes with | Provider and data terms (06 §12) |
 |---|---|---|---|---|---|
-| Orquestador (modelo más capaz disponible, 06 §11) | | | | | |
+| Orchestrator (most capable model available, 06 §11) | | | | | |
 | QA | | | | | |
-| Programador | | | | | |
-| Mecánico (opcional) | | | | | |
-| Verificador (otra familia de modelos que el programador, 06 §12) | | | | | |
+| Programmer | | | | | |
+| Mechanic (optional) | | | | | |
+| Verifier (a different model family from the programmer's, 06 §12) | | | | | |
 
-Ejemplo de la implementación de referencia: orquestador en Claude Code (Opus); QA, programador y mecánico en OpenCode con `deepseek/deepseek-flash`, delegados con `.claude/scripts/aes-oc.sh` (binding en `.claude/aes.env`); verificador como subagente de Claude Code (Sonnet).
+Example from the reference implementation: orchestrator in Claude Code (Opus); QA, programmer and mechanic in OpenCode with `deepseek/deepseek-flash`, delegated with `.claude/scripts/aes-oc.sh` (binding in `.claude/aes.env`); verifier as a Claude Code subagent (Sonnet).
 
-### Niveles de modelo por tarea (06 §12.1)
-| Nivel | Cuándo se usa | Programador | Verificador | Proveedor y condiciones de datos |
+### Model levels per task (06 §12.1)
+| Level | When it is used | Programmer | Verifier | Provider and data terms |
 |---|---|---|---|---|
-| estándar | Por defecto | [binding] | [binding] | |
-| alto | [contexto muy grande, razonamiento que cruza muchas piezas, dos ciclos FAIL por defectos del código] | [binding] | [binding] | |
+| standard | By default | [binding] | [binding] | |
+| high | [very large context, reasoning across many pieces, two FAIL cycles caused by code defects] | [binding] | [binding] | |
 
-[Si en un nivel programador y verificador quedan en la misma familia de modelos, anotarlo aquí como hueco.]
+[If at some level the programmer and the verifier end up in the same model family, note it here as a gap.]
 
-Huecos de control de los roles en otro harness (06 §12, punto 3):
+Control gaps of the roles in another harness (06 §12, point 3):
 
-## Producto y contexto
-- Objetivo:
-- Usuarios:
-- Restricciones:
-- Entornos:
+## Product and context
+- Goal:
+- Users:
+- Constraints:
+- Environments:
 
 ## Stack
-- Lenguaje y versión:
-- Framework y versión:
-- Base de datos:
-- Infraestructura/despliegue:
-- Integraciones:
+- Language and version:
+- Framework and version:
+- Database:
+- Infrastructure/deployment:
+- Integrations:
 
-## Arquitectura y convenciones
-- Directorios/módulos importantes:
-- Patrones existentes que deben respetarse:
-- Contratos y APIs:
+## Architecture and conventions
+- Important directories/modules:
+- Existing patterns that must be respected:
+- Contracts and APIs:
 - ADRs:
-- Reglas de compatibilidad:
+- Compatibility rules:
 
 ## Backlog
-- Herramienta / ubicación: `docs/backlog.md` (02 §11)
-- Releases: definidos en la incepción (01 §2, 02 §12)
-- Prefijos de ID: historias `US-`, enablers `EN-`, defectos `BUG-`, chores `CH-`, lotes `ST-`, spikes `SP-`
-- Escala de prioridad:
-- Escala de Story Points: Fibonacci 1, 2, 3, 5, 8, 13
-- Estados:
-- Criterios propios para clasificar tracks T0–T3 (si difieren de 02 §8):
+- Tool / location: `docs/backlog.md` (02 §11)
+- Releases: defined at inception (01 §2, 02 §12)
+- ID prefixes: stories `US-`, enablers `EN-`, defects `BUG-`, chores `CH-`, batches `ST-`, spikes `SP-`
+- Priority scale:
+- Story point scale: Fibonacci 1, 2, 3, 5, 8, 13
+- Statuses:
+- Own criteria for classifying tracks T0–T3 (if they differ from 02 §8):
 
-## Skills y herramientas (06 §6.2)
-| Skill / herramienta | Tipo (técnica / herramienta) | Origen y versión | Licencia | Revisada por | Roles |
+## Skills and tools (06 §6.2)
+| Skill / tool | Type (technique / tool) | Origin and version | License | Reviewed by | Roles |
 |---|---|---|---|---|---|
-| aes-debugging | Técnica | AES vX.Y.Z | | | Programador, mecánico |
-| aes-inception | Técnica | AES vX.Y.Z | | | Orquestador |
-| impeccable (opcional) | Técnica + herramienta | vX.Y.Z (`docs/aes/skills.lock`) | Apache-2.0 | | Orquestador, programador, verificador |
-| archify (opcional) | Herramienta | vX.Y.Z (`docs/aes/skills.lock`) | MIT | | Orquestador |
+| aes-debugging | Technique | AES vX.Y.Z | | | Programmer, mechanic |
+| aes-inception | Technique | AES vX.Y.Z | | | Orchestrator |
+| impeccable (optional) | Technique + tool | vX.Y.Z (`docs/aes/skills.lock`) | Apache-2.0 | | Orchestrator, programmer, verifier |
+| archify (optional) | Tool | vX.Y.Z (`docs/aes/skills.lock`) | MIT | | Orchestrator |
 
-- Análisis estático de seguridad en la CI (05 §7): herramienta, reglas y qué severidad bloquea:
-- Detector de interfaz en la CI (05 §7): herramienta, y qué reglas bloquean (al principio, ninguna: solo anota):
-- Consultas de red que una skill no permite desactivar (06 §6.2): cuál, qué envía, cuándo se usa:
+- Static security analysis in CI (05 §7): tool, rules and which severity blocks:
+- Interface detector in CI (05 §7): tool, and which rules block (at first, none: it only notes):
+- Network calls a skill does not allow turning off (06 §6.2): which, what it sends, when it is used:
 
-## Diseño (10)
-- Catálogo de diseño: `docs/design-catalog.md`
-- Herramienta del resumen estructural (archivos y firmas públicas):
-- Reglas del nivel 1 cubiertas por linters en la CI (herramienta y regla):
-- Excepciones documentadas al nivel 1:
+## Design (10)
+- Design catalogue: `docs/design-catalog.md`
+- Structural outline tool (files and public signatures):
+- Level-1 rules covered by linters in CI (tool and rule):
+- Documented exceptions to level 1:
 
-## Defectos y compuerta de estabilización (02 §9)
-- Escala de severidad: Crítica / Alta / Media / Menor (ajustes propios, si los hay):
-- Límite de defectos Menores abiertos (por defecto 5):
-- Dónde se implementa la compuerta (CI, L3):
-- Regla permanente para hallazgos tras un PASS del verificador (02 §9.3), p. ej. «lo que añade la tarea se corrige antes de integrar; lo demás va al backlog con severidad»:
-- Corridas sin fallo exigidas para dar por estable una prueba corregida (05 §6):
+## Defects and stabilization gate (02 §9)
+- Severity scale: Critical / High / Medium / Minor (own adjustments, if any):
+- Limit of open Minor defects (5 by default):
+- Where the gate is implemented (CI, L3):
+- Standing rule for findings after a verifier PASS (02 §9.3), e.g. "what the task adds is fixed before integrating; the rest goes to the backlog with a severity":
+- Failure-free runs required to consider a fixed test stable (05 §6):
 
-## Calidad y pruebas
-- Unit tests (comando):
-- Integration tests (comando):
-- E2E / aceptación (comando, con filtro por historia):
-- Lint / formato:
-- Tipos / análisis estático:
-- Seguridad / dependencias:
-- Umbrales justificados:
-- Generación del test map (herramienta o método):
-- Proporción de pruebas holdout:
-- Presupuesto de diff orientativo por tarea (producción / pruebas):
-- Herramienta de prueba manual agéntica (Playwright, curl, etc.):
-- Herramienta que arranca y detiene servidores (06 §10) y puertos del proyecto:
-- Herramienta que comprueba el RED (05 §2.2):
-- Comandos de verificación por elemento (05 §12): ubicación y convención:
-- Política de auditoría de dependencias (p. ej. `npm audit`, `dotnet list package --vulnerable`):
+## Quality and tests
+- Unit tests (command):
+- Integration tests (command):
+- E2E / acceptance (command, with a filter per story):
+- Lint / format:
+- Types / static analysis:
+- Security / dependencies:
+- Justified thresholds:
+- Test map generation (tool or method):
+- Proportion of holdout tests:
+- Indicative diff budget per task (production / tests):
+- Agentic manual testing tool (Playwright, curl, etc.):
+- Tool that starts and stops servers (06 §10) and the project's ports:
+- Tool that checks RED (05 §2.2):
+- Verification commands per item (05 §12): location and convention:
+- Environment check (01 §2.3, item 10): command and what it checks:
+- Dependency audit policy (e.g. `npm audit`, `dotnet list package --vulnerable`):
 
-## Controles en capas (06 §9)
-| Control | L1 — Harness | L2 — Hooks | L3 — Fuera del agente |
+## Layered controls (06 §9)
+| Control | L1 — Harness | L2 — Hooks | L3 — Outside the agent |
 |---|---|---|---|
-| Suite de aceptación protegida | | | |
-| Pruebas holdout inaccesibles | | | |
-| Superficie de cambio | | | |
-| Configuración de agentes/CI protegida | | | |
-| No terminar con pruebas rojas | | | |
-| Detector de trampas | | | |
-| RED confirmado por herramienta | | | |
-| CI por criterio y por fase | | | |
-| Compuerta de estabilización | | | |
-| Aprobaciones en la CI validan quién (etiquetas) | | | |
-| PASS del verificador antes de integrar | | | |
-| Sin servidores ni procesos entre roles | | | |
-| Acciones denegadas no se delegan | | | |
-| Escrituras fuera del repositorio (aislamiento) | | | |
+| Protected acceptance suite | | | |
+| Inaccessible holdout tests | | | |
+| Change surface | | | |
+| Protected agent/CI configuration | | | |
+| Do not finish with red tests | | | |
+| Cheating detector | | | |
+| RED confirmed by a tool | | | |
+| CI per criterion and per phase | | | |
+| Stabilization gate | | | |
+| Approvals in CI check who (labels) | | | |
+| Verifier PASS before integrating | | | |
+| No servers or processes between roles | | | |
+| Denied actions are not delegated | | | |
+| Writes outside the repository (isolation) | | | |
 
-## Permisos y operación de agentes
-- Rutas editables por programador:
-- Rutas protegidas:
-- Ubicación de las pruebas holdout:
-- Operaciones que requieren aprobación:
-- MCP/CLI expuestos:
-- Skills instaladas y su origen:
-- Gestión de secretos:
-- Estrategia de ramas/worktrees:
-- Umbral del circuit breaker (≤ 3):
-- Notas del orquestador durante el ciclo (ubicación y script):
+## Agent permissions and operation
+- Paths the programmer can edit:
+- Protected paths:
+- Location of the holdout tests:
+- Operations that require approval:
+- Exposed MCP/CLI:
+- Installed skills and their origin:
+- Secrets management:
+- Branch/worktree strategy:
+- Circuit breaker threshold (≤ 3):
+- Orchestrator's notes during the cycle (location and script):
 
-## Riesgo y liberación
-- Clasificación de riesgo:
-- Controles High/Critical (T3):
-- Migraciones/rollback:
-- Aprobación de despliegue:
+## Risk and release
+- Risk classification:
+- High/Critical controls (T3):
+- Migrations/rollback:
+- Deployment approval:
 
-## Mejora del harness
-- Ubicación del registro de fallos: `docs/agent-failure-log.md`
-- Ubicación del registro de hallazgos y métricas: `docs/harness-findings.md`
-- Frecuencia de retrospectiva compuesta:
+## Harness improvement
+- Location of the failure log: `docs/agent-failure-log.md`
+- Location of the findings and metrics log: `docs/harness-findings.md`
+- Compound retrospective frequency:
 
-## Excepciones AES
-| Regla | Motivo | Riesgo | Mitigación | Aprobador | Revisión/expiración |
+## AES exceptions
+| Rule | Reason | Risk | Mitigation | Approver | Review/expiry |
 |---|---|---|---|---|---|

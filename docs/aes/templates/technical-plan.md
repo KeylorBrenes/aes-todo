@@ -1,35 +1,35 @@
-# Plan técnico — [US-NNN]
+# Technical plan — [US-NNN]
 
-[Para los agentes: orquestador, QA, programador y verificador (03 §1.2). El responsable humano no necesita leerlo para aprobar la historia. Se **elimina en el cierre**, después de pasar al catálogo de diseño o a un ADR lo que tenga valor para historias futuras. Las pruebas de aceptación y los comandos de verificación no son parte del plan: se conservan.]
+[For the agents: orchestrator, QA, programmer and verifier (03 §1.2). The human owner does not need to read it to approve the story. It is **deleted at close**, after moving whatever has value for future stories into the design catalogue or an ADR. The acceptance tests and the verification commands are not part of the plan: they are kept.]
 
-- **Historia:** [US-NNN](US-NNN.md)
-- **Resumen estructural usado:** `aes-outline.sh <ref> <rutas>` en [commit]
+- **Story:** [US-NNN](US-NNN.md)
+- **Structural outline used:** `aes-outline.sh <ref> <paths>` at [commit]
 
-## Contrato de interfaz
-[Punto de entrada observable contra el que se escriben las pruebas de aceptación (05 §2.1). Omitir solo si la historia no toca ninguna frontera observable.]
+## Interface contract
+[The observable entry point the acceptance tests are written against (05 §2.1). Omit only if the story touches no observable boundary.]
 
-| Tipo | Definición |
+| Type | Definition |
 |---|---|
-| API / CLI / UI / librería | [p. ej. `POST /api/payments` → 201 `{id, amount, dueDate}`; 400 con `errors` por campo; formulario `data-testid="payment-form"`] |
+| API / CLI / UI / library | [e.g. `POST /api/payments` → 201 `{id, amount, dueDate}`; 400 with `errors` per field; form `data-testid="payment-form"`] |
 
-## Corte vertical
-[Qué parte mínima de cada capa necesita esta historia: migración, servidor, interfaz. Nada de otras historias.]
+## Vertical slice
+[Which minimal part of each layer this story needs: migration, server, interface. Nothing from other stories.]
 
-## Tareas (3 como máximo, 04 §3)
-| ID | Resultado | Criterios que deja en verde | Superficie | Agente |
+## Tasks (3 at most, 04 §3)
+| ID | Result | Criteria it turns green | Surface | Agent |
 |---|---|---|---|---|
 | TASK-001 | | AC-01, AC-02 | `TASK-001.scope` | programmer |
 
-[Cada tarea tiene su archivo `TASK-NNN.md` con la nota de diseño (`design-note.md`), su `.scope` y, salvo la última, su `.criteria`.]
+[Each task has its `TASK-NNN.md` file with the design note (`design-note.md`), its `.scope` and, except the last one, its `.criteria`.]
 
-**Criterios que verifican el harness** (la CI, `validate.sh`, `aes.env`, un workflow): sus cambios no van en el PR `qa/<ID>`, porque harían pasar su propio comando de verificación y la CI rechazaría el RED. Van en un PR `spec/<ID>-ci` **entre** `qa/<ID>` y la primera tarea, que prepara el orquestador (rutas protegidas). Indícalo aquí:
+**Criteria that verify the harness** (CI, `validate.sh`, `aes.env`, a workflow): their changes do not go in the `qa/<ID>` PR, because they would make their own verification command pass and CI would reject the RED. They go in a `spec/<ID>-ci` PR **between** `qa/<ID>` and the first task, prepared by the orchestrator (protected paths). Indicate it here:
 
-| Criterio | Archivos del harness que cambia | PR |
+| Criterion | Harness files it changes | PR |
 |---|---|---|
 | | | `spec/<ID>-ci` |
 
-## Riesgos técnicos y preguntas abiertas
+## Technical risks and open questions
 
-## Para consolidar en el cierre
-- Catálogo de diseño:
+## To consolidate at close
+- Design catalogue:
 - ADR:

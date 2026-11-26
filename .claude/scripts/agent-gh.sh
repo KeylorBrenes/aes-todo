@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# AES — Ejecuta gh con la identidad de la GitHub App de los agentes.
-# Así los PR que abren los agentes aparecen como <app>[bot] y tú puedes aprobarlos.
-# En modo personal (AES_IDENTITY=personal en .claude/aes.env, sin app), usa tu sesión de gh.
-# Uso: bash .claude/scripts/agent-gh.sh pr create --title "..." --body "..."
+# AES — Runs gh with the identity of the agents' GitHub App.
+# That way the PRs the agents open appear as <app>[bot] and you can approve them.
+# In personal mode (AES_IDENTITY=personal in .claude/aes.env, no app), it uses your gh session.
+# Usage: bash .claude/scripts/agent-gh.sh pr create --title "..." --body "..."
 set -euo pipefail
 root=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
