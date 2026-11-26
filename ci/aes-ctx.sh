@@ -64,12 +64,16 @@ REG_REF="$BASE"
 active=$( { git show "$REG_REF:specs/active-stories.txt" 2>/dev/null || true; } | clean_list | paste -sd'|')
 
 # The task's criteria, read from the base (like the surface). With no file: the whole item.
-wanted=""; criteria=""
+# With "none" (2.1, 04 §3): a single-layer task that only turns technical tests green; acceptance
+# runs only the regression.
+wanted=""; criteria=""; no_criteria=0
 if [[ -n "$item" && ( "$kind" == "task" || "$kind" == "close" ) ]]; then
   wanted="$item"
   if [[ "$kind" == "task" ]]; then
-    criteria=$( { git show "$BASE:specs/$item/$task.criteria" 2>/dev/null || true; } | clean_list | { grep -E '^(AC-[0-9]+|BUG-[0-9]+)$' || true; })
-    if [[ -n "$criteria" ]]; then
+    raw_criteria=$( { git show "$BASE:specs/$item/$task.criteria" 2>/dev/null || true; } | clean_list)
+    if grep -qix 'none' <<< "$raw_criteria"; then no_criteria=1; wanted=""; fi
+    criteria=$( { grep -E '^(AC-[0-9]+|BUG-[0-9]+)$' <<< "$raw_criteria" || true; })
+    if [[ $no_criteria -eq 0 && -n "$criteria" ]]; then
       # AC-NN → <item>-AC-NN ; BUG-NNN → BUG-NNN (the defect's own tag)
       wanted=$(sed -E "s/^(AC-[0-9]+)$/$item-\1/" <<< "$criteria" | paste -sd'|')
     fi
@@ -92,10 +96,14 @@ fi
 if [[ -n "$item" ]]; then
   case "$kind" in
     task)
-      if [[ -n "$criteria" ]]; then
+      if [[ $no_criteria -eq 1 ]]; then
+        :   # technical tests only: the item's verification commands run at its last task and close
+      elif [[ -n "$criteria" ]]; then
         while IFS= read -r c; do
-          [[ "$c" =~ ^BUG- ]] || continue
-          git cat-file -e "$BASE:specs/$item/$c.verify" 2>/dev/null && verify_green+=" specs/$item/$c.verify"
+          # BUG-NNN.verify; for an acceptance criterion, <ID>-AC-NN.verify or AC-NN.verify.
+          for v in "$c" "$item-$c"; do
+            git cat-file -e "$BASE:specs/$item/$v.verify" 2>/dev/null && verify_green+=" specs/$item/$v.verify"
+          done
         done <<< "$criteria"
         git cat-file -e "$BASE:specs/$item/$item.verify" 2>/dev/null && verify_green+=" specs/$item/$item.verify"
       else

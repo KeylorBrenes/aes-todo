@@ -19,7 +19,7 @@
 [What must not change. Mandatory and non-empty in T2/T3. Name nearby features that could be implemented "for convenience".]
 
 ## Criteria it turns green
-[Criterion or defect IDs. Published on the protected branch as `specs/US-[NNN]/TASK-[NNN].criteria`, one per line (`AC-03`, `BUG-012`). The task's CI runs only those plus the regression suite. The item's **last** task has no such file: it runs the whole item. A criterion verified by another story's regression (characterization) is not listed.]
+[Criterion or defect IDs. Published on the protected branch as `specs/US-[NNN]/TASK-[NNN].criteria`, one per line (`AC-03`, `BUG-012`). The task's CI runs only those plus the regression suite. The item's **last** task has no such file: it runs the whole item. A single-layer task (04 §3) writes `none`: it turns green the technical tests its design note lists. A criterion verified by another story's regression (characterization) is not listed.]
 
 ## Technical context
 [Components, known files, conventions, ADRs.]
@@ -51,12 +51,21 @@ tests/unit/[module]/**
 ```
 
 ## Affected regression tests (test map)
-[Existing test files this change could break.]
+[Existing test files this change could break. Each one that the task obliges to change is in the change surface; for the rest, why it does not change (10 §5).]
 
-## Indicative diff budget
-- Production: ~N lines
-- Tests: ~M lines
-[The deviation that requires justification is the production one.]
+| Test file | Changes? | Why / what may change |
+|---|---|---|
+
+## Budget
+- **Production budget:** N
+- Tests (estimate): ~M lines
+[The production budget is a limit (02 §6), estimated per piece of the design note; CI fails the task above it plus the profile's tolerance. If the estimate does not fit, the task is split before `Ready`.]
+
+## Commit plan
+[One commit per criterion or per piece, each with its tests, in order. `struct:` commits apart.]
+
+1. `feat(US-[NNN]): …` — [piece or criterion] + its tests
+2.
 
 ## Completion condition
 [Which evidence allows moving to review.]
