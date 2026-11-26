@@ -83,3 +83,4 @@ Registro de fallos observados en agentes y de los controles añadidos para evita
   - Opcionalmente, una alerta del guardián cuando la producción pase el presupuesto, o un commit pase de N líneas.
 - **Aprobado por / fecha:** — (lo pidió registrar GG_WellCoded, 2026-11-25, para la revisión futura de la metodología)
 - **Verificado en:** —
+- **Evidencia adicional (2026-11-26):** el PR #22 se integró con merge commit, no con squash, así que los commits de TASK-001 que mezclan cambios estructurales y de comportamiento (renombre de `.retry` a `.action-button`, `ApiError::new`) quedaron tal cual en `dev` (hallazgo F-1 del verificador). En cambio, en TASK-002 el programador separó `test:` y `feat:` en cuatro commits, y el verificador no encontró mezcla.
