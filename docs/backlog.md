@@ -18,7 +18,7 @@ Solo el release en curso está comprometido; los siguientes son una previsión (
 | ID | Tipo | Epic | Título | Requiere | Puntos | Prioridad | Release | Severidad | Estado |
 |---|---|---|---|---|---|---|---|---|---|
 | EN-001 | Enabler | — | Para que las historias se puedan probar de punta a punta, necesitamos el servidor Axum con SQLite entregando la web React, con una prueba de punta a punta y la CI en verde | — | 3 | P0 | REL-001 | — | Accepted |
-| US-001 | Historia | Acceder | Como dueño de la app, quiero crear mi cuenta la primera vez que la abro, para que nadie más pueda reclamarla | EN-001 | 3 | P1 | REL-001 | — | Ready |
+| US-001 | Historia | Acceder | Como dueño de la app, quiero crear mi cuenta la primera vez que la abro, para que nadie más pueda reclamarla | EN-001 | 3 | P1 | REL-001 | — | Accepted |
 | US-002 | Historia | Acceder | Como dueño de la app, quiero iniciar sesión con mi usuario y contraseña, para que solo yo vea mis tareas | US-001 | 3 | P1 | REL-001 | — | Draft |
 | US-003 | Historia | Acceder | Como dueño de la app, quiero cerrar sesión, para que nadie use mi cuenta en un equipo que no es mío | US-002 | 1 | P1 | REL-001 | — | Draft |
 | US-004 | Historia | Gestionar tareas | Como dueño de la app, quiero crear una tarea con un texto, para no olvidar lo que tengo que hacer | US-002 | 2 | P1 | REL-001 | — | Draft |
@@ -62,6 +62,8 @@ Solo el release en curso está comprometido; los siguientes son una previsión (
 
 ## Notas
 - US-001: solo puede existir una cuenta; después de creada, la pantalla de crear cuenta deja de estar disponible.
+- US-002: reemplaza «La cuenta ya está creada.» por el formulario de inicio de sesión; revisar también la prueba de AC-05 de US-001 (D-01, D-12 de US-001).
+- EN-003: antes de publicar, limitar los intentos de crear cuenta e iniciar sesión, porque cada intento calcula un hash Argon2id (D-14 de US-001), y agregar `Secure` a la cookie de sesión.
 - US-005: cada tarea guarda fecha de creación, de inicio y de fin. Textos de la interfaz preparados para traducción desde aquí (lo usa US-023).
 - US-007: desde REL-001 eliminar es un borrado lógico (la tarea va a la papelera); ver y restaurar llega con US-015/US-016. Al eliminar una tarea padre se van sus subtareas, con aviso de cuántas son (se precisa en US-010).
 - US-009: la duración va del inicio al fin, sin pausas; se muestra en días, horas, minutos y segundos.
