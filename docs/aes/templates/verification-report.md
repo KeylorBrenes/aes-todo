@@ -1,68 +1,68 @@
-# Independent Verification Report — US/TASK-[ID]
+# Independent verification report — US/TASK-[ID]
 
-- **Verificador (harness/modelo):**
-- **Sesión nueva y de solo lectura:** Sí / No
-- **Fecha:**
-- **Commit/diff exacto:**
-- **Especificación y versión:**
+- **Verifier (harness/model):**
+- **New, read-only session:** Yes / No
+- **Date:**
+- **Exact commit/diff:**
+- **Specification and version:**
 - **Track:**
-- **Resultado:** PASS / FAIL / BLOCKED
+- **Result:** PASS / FAIL / BLOCKED
 
-## Diseño
-- ¿El diff sigue la nota de diseño (piezas, responsabilidades, patrón, lo que no se hace)?
-- ¿Síntomas del nivel 1 (AES 10 §3)? Lista los encontrados con archivo y línea.
+## Design
+- Does the diff follow the design note (pieces, responsibilities, pattern, what is not done)?
+- Level-1 symptoms (AES 10 §3)? List the ones found with file and line.
 
-## Puntos de atención recibidos
-[Hechos que el orquestador señaló. Se comprueban como hipótesis, no se aceptan como conclusiones.]
+## Points of attention received
+[Facts the orchestrator pointed out. They are checked as hypotheses, not accepted as conclusions.]
 
-## Alcance verificado
-[Historia, tareas, criterios, contrato de interfaz y rutas revisados.]
+## Scope verified
+[Story, tasks, criteria, interface contract and paths reviewed.]
 
-## Evidencia re-ejecutada
-| Criterio / control | Método (comando o herramienta) | Resultado | Evidencia (salida, captura, artefacto) |
+## Re-run evidence
+| Criterion / control | Method (command or tool) | Result | Evidence (output, screenshot, artifact) |
 |---|---|---|---|
-| Aceptación visible | | | |
-| Aceptación holdout | | | |
-| Unitarias/integración | | | |
-| Lint/tipos/seguridad | | | |
+| Visible acceptance | | | |
+| Holdout acceptance | | | |
+| Unit/integration | | | |
+| Lint/types/security | | | |
 
-## Guardián de CI
-- Superficie de cambio respetada: Sí / No (archivos fuera):
-- Rutas protegidas intactas: Sí / No
-- Marcadores de trampa: Ninguno / [lista y justificación]
-- Dependencias nuevas:
+## CI guard
+- Change surface respected: Yes / No (files outside):
+- Protected paths intact: Yes / No
+- Cheating markers: None / [list and justification]
+- New dependencies:
 
-## Señales de desvío (Beck)
-| Señal | ¿Presente? | Evidencia |
+## Drift signals (Beck)
+| Signal | Present? | Evidence |
 |---|---|---|
-| Bucles o código repetitivo innecesario | | |
-| Funcionalidad no pedida | | |
-| Pruebas desactivadas, borradas o debilitadas | | |
+| Loops or unnecessary repetitive code | | |
+| Functionality nobody asked for | | |
+| Tests disabled, deleted or weakened | | |
 
-## Prueba manual agéntica
-[Cómo se arrancaron los servidores (con la herramienta que los detiene al terminar), qué flujos se ejercitaron, **con datos distintos a los de las pruebas**, capturas y salida literal. Sin prueba manual, cuando el track la exige, el resultado es BLOCKED.]
+## Agentic manual test
+[How the servers were started (with the tool that stops them at the end), which flows were exercised, **with data different from the tests'**, screenshots and verbatim output. Without a manual test, when the track requires one, the result is BLOCKED.]
 
-## Hallazgos
-Cada afirmación se comprobó en su fuente (00 §7): contenido versionado con `git show`/`git cat-file`, comportamiento en el código o ejecutándolo.
+## Findings
+Each claim was checked at its source (00 §7): versioned content with `git show`/`git cat-file`, behaviour in the code or by running it.
 
-| ID | Origen | Tipo | Severidad propuesta | Hallazgo | Reproducción/evidencia | Criterio o regla incumplida |
+| ID | Origin | Type | Proposed severity | Finding | Reproduction/evidence | Criterion or rule broken |
 |---|---|---|---|---|---|---|
-| F-1 | De la tarea / preexistente | Defecto / Hueco de la especificación | Crítica / Alta / Media / Menor | | | |
+| F-1 | From the task / pre-existing | Defect / Specification gap | Critical / High / Medium / Minor | | | |
 
-- **Origen.** «De la tarea»: sobre lo que añade la tarea. «Preexistente»: comportamiento ya aceptado o anterior → defecto del backlog con severidad.
-- **Tipo.** «Defecto»: el código incumple algo escrito (criterio, nota de diseño, DoD, `DESIGN.md`, ADR); cita la regla. «Hueco de la especificación»: el código hace algo razonable que nada escrito decide; propón qué debería decir la nota o el catálogo.
-- Qué se hace con cada uno lo decide la regla de 02 §9.3, no el verificador.
+- **Origin.** "From the task": about what the task adds. "Pre-existing": behaviour already accepted or older → a backlog defect with a severity.
+- **Type.** "Defect": the code breaks something written (criterion, design note, DoD, `DESIGN.md`, ADR); cite the rule. "Specification gap": the code does something reasonable that nothing written decides; propose what the note or the catalogue should say.
+- What is done with each one is decided by the rule in 02 §9.3, not by the verifier.
 
 ## Commits
-[¿Separan estructural y conductual? ¿Algún `struct:` cambia comportamiento?]
+[Do they separate structural and behavioural changes? Does any `struct:` change behaviour?]
 
-## Cambios fuera de alcance
-[Indicar ninguno o enumerarlos.]
+## Out-of-scope changes
+[State none or list them.]
 
-## Entorno al terminar
-[Sin servidores ni procesos del verificador escuchando (06 §10).]
+## Environment at the end
+[No verifier servers or processes left listening (06 §10).]
 
-## Riesgos y aspectos no verificados
+## Risks and aspects not verified
 
-## Conclusión
-[Justificar PASS/FAIL/BLOCKED. PASS solo si todos los criterios obligatorios tienen evidencia re-ejecutada suficiente. Para fallos holdout, el mensaje al programador incluye solo el ID del criterio y el comportamiento observado.]
+## Conclusion
+[Justify PASS/FAIL/BLOCKED. PASS only if every mandatory criterion has enough re-run evidence. For holdout failures, the message to the programmer includes only the criterion ID and the observed behaviour.]

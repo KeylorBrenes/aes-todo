@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# AES — Credential helper de git que entrega el token de la GitHub App de los agentes.
-# Git lo llama con "get", "store" o "erase" y le pasa por stdin líneas clave=valor.
-# Solo respondemos a "get" para github.com; lo demás se ignora.
+# AES — Git credential helper that hands out the token of the agents' GitHub App.
+# Git calls it with "get", "store" or "erase" and passes key=value lines on stdin.
+# We only answer "get" for github.com; the rest is ignored.
 set -euo pipefail
 
 [[ "${1:-}" == "get" ]] || exit 0

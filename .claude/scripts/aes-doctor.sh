@@ -1,41 +1,41 @@
 #!/usr/bin/env bash
-# AES 1.5.2 — Chequeo del entorno antes de delegar (aes-cycle §0, paso 6).
+# AES — Environment check before delegating (aes-cycle §0, step 6).
 #
-# Comprueba de una vez todo lo que un rol necesita para trabajar en esta máquina, para pedirle al
-# humano lo que falte en una sola ronda y no descubrirlo tarea a tarea:
-#   1. herramientas de AES (git, jq, node, npm, gh, openssl);
-#   2. identidad: token de la GitHub App y sus permisos (sin Workflows: 06 §10), o sesión de gh;
-#   3. OpenCode, si algún rol va ahí: versión, opciones que usa aes-oc.sh y que cada modelo responde;
-#   4. el stack: las comprobaciones de AES_DOCTOR_CHECKS en .claude/aes.env.
+# It checks in one go everything a role needs to work on this machine, so the human is asked
+# for whatever is missing in a single round instead of discovering it task by task:
+#   1. AES tools (git, jq, node, npm, gh, openssl);
+#   2. identity: the GitHub App's token and its permissions (no Workflows: 06 §10), or a gh session;
+#   3. OpenCode, if any role goes there: version, the options aes-oc.sh uses and that each model answers;
+#   4. the stack: the checks in AES_DOCTOR_CHECKS in .claude/aes.env.
 #
-# Uso: bash .claude/scripts/aes-doctor.sh [--no-ping] [--only aes|identity|opencode|stack]
-#      bash .claude/scripts/aes-doctor.sh --probe rust|dotnet|node    (una compilación mínima)
+# Usage: bash .claude/scripts/aes-doctor.sh [--no-ping] [--only aes|identity|opencode|stack]
+#        bash .claude/scripts/aes-doctor.sh --probe rust|dotnet|node    (a minimal build)
 #
-# AES_DOCTOR_CHECKS: una comprobación por línea, «descripción|comando». El comando se ejecuta con
-# bash en la raíz del repositorio y pasa si sale con 0. «probe:<stack>» compila un proyecto mínimo
-# en una carpeta temporal (detecta, p. ej., un compilador sin enlazador o sin SDK):
+# AES_DOCTOR_CHECKS: one check per line, "description|command". The command runs with
+# bash at the repository's root and passes if it exits with 0. "probe:<stack>" builds a minimal project
+# in a temporary folder (it detects, e.g., a compiler without a linker or without an SDK):
 #   AES_DOCTOR_CHECKS="
-#   Rust (cargo y enlazador)|probe:rust
+#   Rust (cargo and linker)|probe:rust
 #   Web (Node)|probe:node
-#   Navegadores de Playwright|npx --prefix tests/acceptance playwright --version
+#   Playwright browsers|npx --prefix tests/acceptance playwright --version
 #   "
-# Salida: 0 = todo bien (puede haber avisos «!»); 1 = falta algo («✗»).
+# Exit: 0 = all good (there may be "!" warnings); 1 = something is missing ("✗").
 set -uo pipefail
 
-# --- Compilaciones mínimas ------------------------------------------------------------------------
+# --- Minimal builds -------------------------------------------------------------------------------
 probe() {
   local t rc=0; t=$(mktemp -d)
   case "$1" in
     rust)
-      command -v cargo >/dev/null || { echo "falta cargo (instala rustup)"; rm -rf "$t"; return 1; }
+      command -v cargo >/dev/null || { echo "cargo is missing (install rustup)"; rm -rf "$t"; return 1; }
       (cd "$t" && cargo new --vcs none -q aesprobe && cd aesprobe && cargo build -q) || rc=$? ;;
     dotnet)
-      command -v dotnet >/dev/null || { echo "falta dotnet"; rm -rf "$t"; return 1; }
+      command -v dotnet >/dev/null || { echo "dotnet is missing"; rm -rf "$t"; return 1; }
       (cd "$t" && dotnet new console -o aesprobe >/dev/null && dotnet build aesprobe -nologo -v q) || rc=$? ;;
     node)
-      if ! command -v node >/dev/null || ! command -v npm >/dev/null; then echo "falta node o npm"; rm -rf "$t"; return 1; fi
+      if ! command -v node >/dev/null || ! command -v npm >/dev/null; then echo "node or npm is missing"; rm -rf "$t"; return 1; fi
       (cd "$t" && npm init -y >/dev/null && node -e 'process.exit(0)') || rc=$? ;;
-    *) echo "probe desconocido: $1 (rust, dotnet o node)"; rc=2 ;;
+    *) echo "unknown probe: $1 (rust, dotnet or node)"; rc=2 ;;
   esac
   rm -rf "$t"; return $rc
 }
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 root=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)") \
-  || { echo "aes-doctor: no estás dentro de un repositorio git." >&2; exit 1; }
+  || { echo "aes-doctor: you are not inside a git repository." >&2; exit 1; }
 cd "$root" || exit 1
 overrides=$(env | grep -E '^(AES_BIND_|AES_OC_|AES_DOCTOR_)[A-Z_]*=' || true)
 # shellcheck source=/dev/null
@@ -65,7 +65,7 @@ bad()  { printf '  ✗ %s\n' "$*"; fails=$((fails + 1)); }
 warn() { printf '  ! %s\n' "$*"; warns=$((warns + 1)); }
 section() { [[ -z "$only" || "$only" == "$1" ]] || return 1; printf '\n%s\n' "$2"; }
 
-# Ejecuta un comando con límite de tiempo, sin `timeout` (macOS no lo trae). $1 segundos, $2 log.
+# Runs a command with a time limit, without `timeout` (macOS does not ship it). $1 seconds, $2 log.
 limited() {
   local secs=$1 log=$2 t=0; shift 2
   "$@" > "$log" 2>&1 &
@@ -77,48 +77,48 @@ limited() {
   wait "$pid"
 }
 
-# --- 1. Herramientas de AES ------------------------------------------------------------------------
-if section aes "Herramientas de AES"; then
-  if [[ -f .claude/agents/verifier.md && -f CLAUDE.md ]]; then ok "raíz del proyecto: $root"
-  else bad "esta carpeta no tiene .claude/agents ni CLAUDE.md: abre Claude Code dentro del proyecto"; fi
+# --- 1. AES tools ---------------------------------------------------------------------------------
+if section aes "AES tools"; then
+  if [[ -f .claude/agents/verifier.md && -f CLAUDE.md ]]; then ok "project root: $root"
+  else bad "this folder has no .claude/agents or CLAUDE.md: open Claude Code inside the project"; fi
   ok "bash ${BASH_VERSION%%(*}"
   for c in git jq node npm gh openssl; do
-    if command -v "$c" >/dev/null; then ok "$c"; else bad "falta $c en el PATH"; fi
+    if command -v "$c" >/dev/null; then ok "$c"; else bad "$c is missing from the PATH"; fi
   done
   if command -v node >/dev/null && node .claude/scripts/aes-board.mjs --check-hook >/dev/null 2>&1; then
-    ok "tablero del backlog: se regenera solo tras cada pull (.aes/board.html)"
+    ok "backlog board: regenerated by itself after each pull (.aes/board.html)"
   else
-    warn "el tablero no se regenera solo en esta máquina (los hooks de git no se versionan): node .claude/scripts/aes-board.mjs --install-hook"
+    warn "the board is not regenerated by itself on this machine (git hooks are not versioned): node .claude/scripts/aes-board.mjs --install-hook"
   fi
 fi
 
-# --- 2. Identidad ----------------------------------------------------------------------------------
-if section identity "Identidad (${AES_IDENTITY:-app})"; then
+# --- 2. Identity ----------------------------------------------------------------------------------
+if section identity "Identity (${AES_IDENTITY:-app})"; then
   if [[ "${AES_IDENTITY:-app}" == personal ]]; then
-    if gh auth status >/dev/null 2>&1; then ok "sesión de gh activa (modo personal)"; else bad "gh auth status falla: gh auth login"; fi
+    if gh auth status >/dev/null 2>&1; then ok "gh session active (personal mode)"; else bad "gh auth status fails: gh auth login"; fi
   elif tok=$(bash .claude/scripts/gh-app-token.sh 2>&1) && [[ "$tok" == ghs_* ]]; then
-    ok "token de la GitHub App"
+    ok "GitHub App token"
     perms=$(bash .claude/scripts/gh-app-token.sh --permissions 2>/dev/null || echo '{}')
     for p in contents pull_requests; do
       v=$(jq -r --arg p "$p" '.[$p] // "none"' <<< "$perms")
-      if [[ "$v" == write ]]; then ok "app: $p = write"; else bad "app: $p = $v (hace falta write; ajústalo en la app y acepta el cambio en la instalación)"; fi
+      if [[ "$v" == write ]]; then ok "app: $p = write"; else bad "app: $p = $v (write is needed; adjust it in the app and accept the change in the installation)"; fi
     done
     if [[ "$(jq -r '.workflows // "none"' <<< "$perms")" != none ]]; then
-      warn "app: tiene permiso de workflows. AES lo deja en «No access» para que los agentes no puedan cambiar la CI que los juzga (06 §10); los cambios de workflow los aplicas tú con .claude/scripts/aes-workflow.sh"
-    else ok "app: sin permiso de workflows (como pide AES)"; fi
+      warn "app: it has the workflows permission. AES leaves it at \"No access\" so that the agents cannot change the CI that judges them (06 §10); you apply workflow changes with .claude/scripts/aes-workflow.sh"
+    else ok "app: no workflows permission (as AES asks)"; fi
   else
-    bad "no hay token de la app: $tok"
+    bad "no app token: $tok"
   fi
 fi
 
 # --- 3. OpenCode -----------------------------------------------------------------------------------
 models=()
-# Todos los bindings: los de cada rol y los de cada nivel de modelo (AES_BIND_<ROL>_<NIVEL>).
+# Every binding: each role's and each model level's (AES_BIND_<ROLE>_<LEVEL>).
 for v in $(compgen -v AES_BIND_); do
   b=${!v}
   case "$b" in
     claude|claude:sonnet|claude:opus|claude:haiku|opencode:*/*) ;;
-    *) bad "$v=\"$b\" no es un binding válido (claude, claude:<sonnet|opus|haiku> u opencode:<proveedor>/<modelo>)" ;;
+    *) bad "$v=\"$b\" is not a valid binding (claude, claude:<sonnet|opus|haiku> or opencode:<provider>/<model>)" ;;
   esac
   if [[ "$b" == opencode:* ]]; then
     m=${b#opencode:}; seen=0
@@ -128,24 +128,26 @@ for v in $(compgen -v AES_BIND_); do
 done
 if (( ${#models[@]} > 0 )) && section opencode "OpenCode (${models[*]})"; then
   if ! command -v opencode >/dev/null; then
-    bad "falta opencode en el PATH"
+    bad "opencode is missing from the PATH"
   else
-    ver=$(opencode --version 2>/dev/null | tr -d '\r' || echo '?'); ver=${ver#v}
-    if [[ " ${AES_OC_TESTED:-} " == *" $ver "* ]]; then ok "opencode $ver (probada con AES)"
-    else warn "opencode $ver no está entre las versiones probadas (${AES_OC_TESTED:-sin dato}); se comprueban sus opciones"; fi
+    # Only the number: depending on the version and the install, it prints "2.2.7", "v2.2.7" or "opencode v2.2.7".
+    raw=$(opencode --version 2>/dev/null | tr -d '\r' || true)
+    ver=$(grep -oE '[0-9]+(\.[0-9]+)+' <<< "$raw" | head -n1); ver=${ver:-${raw:-?}}
+    if [[ " ${AES_OC_TESTED:-} " == *" $ver "* ]]; then ok "opencode $ver (tested with AES)"
+    else warn "opencode $ver is not among the tested versions (${AES_OC_TESTED:-none}); its options are checked"; fi
     help=$(opencode run --help 2>&1 || true); missing=""
     for flag in --agent --model --format --session --title; do grep -q -- "$flag" <<< "$help" || missing+=" $flag"; done
-    if [[ -z "$missing" ]]; then ok "opencode run acepta las opciones de aes-oc.sh"; else bad "opencode run no acepta:$missing (aes-oc.sh no funcionará)"; fi
+    if [[ -z "$missing" ]]; then ok "opencode run accepts aes-oc.sh's options"; else bad "opencode run does not accept:$missing (aes-oc.sh will not work)"; fi
     for m in "${models[@]}"; do
-      [[ "$m" == *-free ]] && warn "$m es gratuito: el plan corta las sesiones largas por límite de uso (429). Úsalo solo para probar"
+      [[ "$m" == *-free ]] && warn "$m is free: the plan cuts long sessions off at its usage limit (429). Use it only for trying things out"
       (( ping )) || continue
       log=$(mktemp)
-      if limited 240 "$log" opencode run -m "$m" --format json "Responde solo: OK" \
+      if limited 240 "$log" opencode run -m "$m" --format json "Answer only: OK" \
          && jq -cR 'fromjson? | objects' "$log" 2>/dev/null | jq -se 'any(.[]; .type == "text") and (any(.[]; .type == "error") | not)' >/dev/null; then
-        ok "$m responde"
+        ok "$m answers"
       else
         msg=$(jq -cR 'fromjson? | objects | select(.type == "error") | (.error.data.message // .error.name)' "$log" 2>/dev/null | tr -d '"' | tail -n 1)
-        bad "$m no responde: ${msg:-$(tail -n 2 "$log" | tr '\n' ' ')} (clave, saldo o conexión: opencode auth list)"
+        bad "$m does not answer: ${msg:-$(tail -n 2 "$log" | tr '\n' ' ')} (key, balance or connection: opencode auth list)"
       fi
       rm -f "$log"
     done
@@ -153,7 +155,7 @@ if (( ${#models[@]} > 0 )) && section opencode "OpenCode (${models[*]})"; then
 fi
 
 # --- 4. Stack --------------------------------------------------------------------------------------
-if section stack "Stack del proyecto (AES_DOCTOR_CHECKS)"; then
+if section stack "Project stack (AES_DOCTOR_CHECKS)"; then
   n=0
   while IFS= read -r line; do
     line=${line%$'\r'}; [[ -z "${line// /}" || "$line" == \#* ]] && continue
@@ -163,9 +165,9 @@ if section stack "Stack del proyecto (AES_DOCTOR_CHECKS)"; then
     if (( rc == 0 )); then ok "$desc"; else bad "$desc: $(tail -n 3 "$log" | tr '\n' ' ')"; fi
     rm -f "$log"
   done <<< "${AES_DOCTOR_CHECKS:-}"
-  (( n > 0 )) || warn "AES_DOCTOR_CHECKS está vacío: sin comprobaciones del stack. Si ya hay ADR del stack, el orquestador las propone (incluida una compilación mínima)"
+  (( n > 0 )) || warn "AES_DOCTOR_CHECKS is empty: no stack checks. If there is already a stack ADR, the orchestrator proposes them (including a minimal build)"
 fi
 
 echo
-if (( fails > 0 )); then echo "Faltan $fails cosas (✗). Resuélvelas todas antes de delegar."; exit 1; fi
-if (( warns > 0 )); then echo "Entorno listo ($warns avisos «!»)."; else echo "Entorno listo."; fi
+if (( fails > 0 )); then echo "$fails things are missing (✗). Resolve them all before delegating."; exit 1; fi
+if (( warns > 0 )); then echo "Environment ready ($warns \"!\" warnings)."; else echo "Environment ready."; fi

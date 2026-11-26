@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# AES — SubagentStop. Capa L2.
-# Antes de que un subagente AES termine:
-#   - todos (qa, programmer, mechanic, verifier): no deben dejar servidores escuchando en los
-#     puertos del proyecto (FL-007: contaminan la evidencia del siguiente rol);
-#   - programmer y mechanic: además, guardián AES local y validaciones del proyecto
-#     (ci/validate.sh, si existe).
-# Bloquea UNA vez (stop_hook_active evita bucles): si siguen fallando, el agente debe
-# terminar reportando BLOCKED **para el humano**, y el orquestador lo verá.
+# AES — SubagentStop. Layer L2.
+# Before an AES subagent finishes:
+#   - all (qa, programmer, mechanic, verifier): they must not leave servers listening on the
+#     project's ports (FL-007: they contaminate the next role's evidence);
+#   - programmer and mechanic: also, the local AES guard and the project's validations
+#     (ci/validate.sh, if it exists).
+# It blocks ONCE (stop_hook_active avoids loops): if they keep failing, the agent must
+# finish reporting BLOCKED **for the human**, and the orchestrator will see it.
 set -uo pipefail
 # shellcheck source=/dev/null
 source "$(dirname "$0")/lib.sh"
@@ -19,7 +19,7 @@ case "$AES_ROLE" in qa|programmer|mechanic|verifier) ;; *) exit 0 ;; esac
 cwd=$(aes_get '.cwd'); [[ -z "$cwd" ]] && cwd=$PWD
 root=$(aes_repo_root "$cwd")
 [[ -z "$root" ]] && exit 0
-# Si el subagente trabajó en un worktree (AES 1.3.0), las comprobaciones se hacen ahí.
+# If the subagent worked in a worktree, the checks are done there.
 main=$(dirname "$(git -C "$root" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")
 if [[ -s "$main/.aes/active-worktree" ]]; then
   wt=$(tr -d '\r\n' < "$main/.aes/active-worktree")
@@ -30,8 +30,8 @@ cd "$root" || exit 0
 failures=()
 log=$(mktemp)
 
-# 0. Servidores vivos en los puertos del proyecto.
-#    Linux: /proc/net/tcp(6) (no depende de ss/netstat). Windows/macOS: netstat.
+# 0. Live servers on the project's ports.
+#    Linux: /proc/net/tcp(6) (does not depend on ss/netstat). Windows/macOS: netstat.
 if [[ -z "${AES_PORTS:-}" && -f .claude/aes.env ]]; then
   AES_PORTS=$(sed -n 's/^AES_PORTS=//p' .claude/aes.env | tr -d '"\r' | head -n1)
 fi
@@ -41,45 +41,45 @@ for port in $AES_PORTS; do
   port_listening "$port" && listening+=" $port"
 done
 if [[ -n "$listening" ]]; then
-  failures+=("quedan servidores escuchando en los puertos:$listening. Usa .claude/scripts/with-servers.sh, que los detiene solo; si no puedes detenerlos, reporta BLOCKED para el humano (no le pidas a otro agente que lo haga)")
+  failures+=("servers are still listening on the ports:$listening. Use .claude/scripts/with-servers.sh, which stops them by itself; if you cannot stop them, report BLOCKED for the human (do not ask another agent to do it)")
 fi
 
 if [[ "$AES_ROLE" == "qa" || "$AES_ROLE" == "verifier" ]]; then
   if (( ${#failures[@]} > 0 )); then
-    printf 'AES [%s]: no puedes terminar todavía. %s\n' "$AES_ROLE" "${failures[*]}" >&2
+    printf 'AES [%s]: you cannot finish yet. %s\n' "$AES_ROLE" "${failures[*]}" >&2
     rm -f "$log"; exit 2
   fi
   rm -f "$log"; exit 0
 fi
 
-# 1. Guardián AES local (mismas reglas que la CI) contra la rama base (origin/dev, u origin/main en un hotfix).
-#    Las dependencias no se juzgan aquí: su aprobación es humana y vive en la CI
-#    (etiqueta aes:deps-approved). Rutas protegidas, superficie, pruebas borradas y
-#    marcadores sí bloquean.
+# 1. Local AES guard (same rules as CI) against the base branch (origin/dev, or origin/main in a hotfix).
+#    Dependencies are not judged here: their approval is human and lives in CI
+#    (label aes:deps-approved). Protected paths, surface, deleted tests and
+#    markers do block.
 branch=$(aes_branch "$root")
 scope=$(aes_scope_file "$branch")
 if [[ -n "$scope" ]]; then
   if ! AES_ALLOW_DEPS=1 BASE_REF="$(bash .claude/scripts/aes-base.sh)" TASK_SCOPE_FILE="$scope" bash ci/aes-guard.sh >>"$log" 2>&1; then
-    failures+=("guardián AES")
+    failures+=("AES guard")
   fi
 fi
 
-# 2. Cambios sin commit: el trabajo debe quedar en commits.
+# 2. Uncommitted changes: the work must end up in commits.
 if [[ -n "$(git status --porcelain --untracked-files=normal -- . ':!**/bin/**' ':!**/obj/**')" ]]; then
-  failures+=("hay cambios sin commit (git status no está limpio)")
+  failures+=("there are uncommitted changes (git status is not clean)")
 fi
 
-# 3. Validaciones del proyecto (ci/validate.sh: build, pruebas, lint). Solo en ramas de tarea:
-#    en el cierre (spec/<ID>-close) mechanic solo toca documentación.
+# 3. The project's validations (ci/validate.sh: build, tests, lint). Only on task branches:
+#    at close (spec/<ID>-close) mechanic only touches documentation.
 if [[ -n "$scope" && -f ci/validate.sh ]]; then
-  bash ci/validate.sh >>"$log" 2>&1 || failures+=("validaciones del proyecto (ci/validate.sh)")
+  bash ci/validate.sh >>"$log" 2>&1 || failures+=("the project's validations (ci/validate.sh)")
 fi
 
 if (( ${#failures[@]} > 0 )); then
   {
-    echo "AES [$AES_ROLE]: no puedes terminar todavía. Falló: ${failures[*]}."
-    echo "Corrige sin tocar pruebas protegidas ni salir de la superficie, o termina reportando BLOCKED con la causa."
-    echo "--- últimas líneas ---"
+    echo "AES [$AES_ROLE]: you cannot finish yet. Failed: ${failures[*]}."
+    echo "Fix it without touching protected tests or leaving the surface, or finish reporting BLOCKED with the cause."
+    echo "--- last lines ---"
     tail -n 40 "$log"
   } >&2
   rm -f "$log"

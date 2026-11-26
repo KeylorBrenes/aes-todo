@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
-# AES 1.3.0 — WorktreeCreate: el subagente trabaja en la rama de trabajo real, no en una rama
-# temporal (standard/06 §10). Sustituye la lógica por defecto de Claude Code.
+# AES — WorktreeCreate: the subagent works on the real work branch, not on a temporary
+# branch (standard/06 §10). It replaces Claude Code's default logic.
 #
-# El orquestador indica la rama antes de delegar:  bash .claude/scripts/aes-wt.sh delegate <rama>
-# Este hook la lee de .aes/next-branch (un solo uso), abre el worktree con aes-wt.sh, que copia
-# los archivos locales que el rol necesita, y deja la ruta en .aes/active-worktree para
-# subagent-gate.sh. En stdout imprime solo la ruta, que es lo que Claude Code espera.
+# The orchestrator names the branch before delegating:  bash .claude/scripts/aes-wt.sh delegate <branch>
+# This hook reads it from .aes/next-branch (single use), opens the worktree with aes-wt.sh, which copies
+# the local files the role needs, and leaves the path in .aes/active-worktree for
+# subagent-gate.sh. On stdout it prints only the path, which is what Claude Code expects.
 #
-# Falla cerrado: sin rama indicada no crea nada, y el subagente no arranca.
+# It fails closed: with no branch named it creates nothing, and the subagent does not start.
 set -uo pipefail
 
 input=$(cat)
 root=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")
-[[ -n "$root" && -d "$root" ]] || { echo "AES worktree-create: no se encontró el repositorio." >&2; exit 1; }
+[[ -n "$root" && -d "$root" ]] || { echo "AES worktree-create: repository not found." >&2; exit 1; }
 
 next="$root/.aes/next-branch"
 if [[ ! -s "$next" ]]; then
   name=$(jq -r '.worktree_name // .name // empty' <<< "$input" 2>/dev/null)
-  echo "AES worktree-create: no hay rama indicada para el worktree '${name:-?}'. El orquestador debe ejecutar 'aes-wt.sh delegate <rama>' antes de delegar." >&2
+  echo "AES worktree-create: no branch named for the worktree '${name:-?}'. The orchestrator must run 'aes-wt.sh delegate <branch>' before delegating." >&2
   exit 1
 fi
 branch=$(tr -d '\r\n' < "$next")
 rm -f "$next"
 
 if ! path=$(bash "$root/.claude/scripts/aes-wt.sh" open "$branch"); then
-  echo "AES worktree-create: no se pudo abrir el worktree de $branch." >&2
+  echo "AES worktree-create: could not open the worktree of $branch." >&2
   exit 1
 fi
 printf '%s\n' "$path" > "$root/.aes/active-worktree"

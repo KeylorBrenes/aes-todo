@@ -1,25 +1,25 @@
-# EPIC-[NNN] — [Título]
+# EPIC-[NNN] — [Title]
 
-- **Estado:** Draft / Active / Done / Deferred
-- **Prioridad:** P0 / P1 / P2 / P3
-- **Responsable de producto:**
+- **Status:** Draft / Active / Done / Deferred
+- **Priority:** P0 / P1 / P2 / P3
+- **Product owner:**
 
-## Capacidad / resultado
-[Qué capacidad amplia debe obtener el producto.]
+## Capability / outcome
+[Which broad capability the product must gain.]
 
-## Valor esperado
-[Beneficio y usuarios afectados.]
+## Expected value
+[Benefit and affected users.]
 
-## Alcance orientativo
-[Qué podría incluir; no es todavía un contrato de implementación.]
+## Indicative scope
+[What it might include; it is not yet an implementation contract.]
 
-## Fuera de alcance
+## Out of scope
 
-## Historias relacionadas
-| ID | Historia | Estado | Puntos |
+## Related stories
+| ID | Story | Status | Points |
 |---|---|---|---|
 
-## Riesgos, dependencias e hipótesis
+## Risks, dependencies and hypotheses
 
-## Condición de cierre del Epic
-[Qué conjunto de resultados indica que la capacidad está entregada.]
+## Epic close condition
+[Which set of results indicates that the capability has been delivered.]

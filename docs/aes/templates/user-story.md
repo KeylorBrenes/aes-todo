@@ -1,51 +1,51 @@
-# US-[NNN] — Como [tipo de usuario], quiero [capacidad], para [beneficio]
+# US-[NNN] — As a [type of user], I want [capability], so that [benefit]
 
-[La historia es para el responsable humano y se conserva. Se escribe en lenguaje de cliente: qué se logra y cómo se comprueba, sin tablas, clases, endpoints ni patrones (03 §1). Lo técnico va en el plan técnico (`technical-plan.md`), que se elimina en el cierre.
-Para enablers, el título es «EN-[NNN] — Para [objetivo], necesitamos [capacidad técnica]». Para defectos, chores y lotes de estabilización usa `defect.md` y `stabilization-batch.md`.]
+[The story is for the human owner and is kept. It is written in the customer's language: what is achieved and how it is checked, with no tables, classes, endpoints or patterns (03 §1). The technical part goes in the technical plan (`technical-plan.md`), which is deleted at close.
+For enablers, the title is "EN-[NNN] — For [goal], we need [technical capability]". For defects, chores and stabilization batches use `defect.md` and `stabilization-batch.md`.]
 
-- **Requiere:** US-[MMM] / —
+- **Depends on:** US-[MMM] / —
 - **Epic:** EPIC-[NNN]
 - **Track:** T2 / T3
-- **Estado:** Draft / Ready / In Progress / In Review / Blocked / Ready for Acceptance / Accepted / Released / Rejected / Deferred
-- **Prioridad:** P0 / P1 / P2 / P3
-- **Story Points:** 1 / 2 / 3 / 5 [8 o más: dividir antes de refinar, 02 §3.1]
-- **Riesgo:** Low / Medium / High / Critical
-- **Aprobador de producto:**
+- **Status:** Draft / Ready / In Progress / In Review / Blocked / Ready for Acceptance / Accepted / Released / Rejected / Deferred
+- **Priority:** P0 / P1 / P2 / P3
+- **Story points:** 1 / 2 / 3 / 5 [8 or more: split before refining, 02 §3.1]
+- **Risk:** Low / Medium / High / Critical
+- **Product approver:**
 
-## Contexto y reglas
-[En términos del negocio: por qué importa y qué reglas aplican.]
+## Context and rules
+[In business terms: why it matters and which rules apply.]
 
-## Criterios de aceptación
-[Dado / Cuando / Entonces, en lenguaje del usuario. Cada acción que guarda, edita, elimina o envía tiene un criterio de fallo: qué ve el usuario si no se pudo y qué lo quita (03 §3).]
+## Acceptance criteria
+[Given / When / Then, in the user's language. Every action that saves, edits, deletes or sends has a failure criterion: what the user sees if it could not be done and what clears it (03 §3).]
 
-| ID | Dado | Cuando | Entonces | Se comprueba con |
+| ID | Given | When | Then | Checked with |
 |---|---|---|---|---|
-| AC-01 | que soy un visitante | me registro con un email válido y una contraseña de al menos 8 caracteres | mi cuenta queda creada y entro a la app con la sesión iniciada | Prueba de aceptación |
-| AC-02 | | | | Regresión de US-[MMM] (el comportamiento ya existe, 05 §2.4) |
+| AC-01 | I am a visitor | I sign up with a valid email and a password of at least 8 characters | my account is created and I enter the app signed in | Acceptance test |
+| AC-02 | | | | Regression of US-[MMM] (the behaviour already exists, 05 §2.4) |
 
-## Fuera de alcance
-[Obligatorio y no vacío. Lo que alguien podría esperar de esta historia y no se hace aquí, con la historia que lo cubrirá si existe.]
+## Out of scope
+[Mandatory and non-empty. What someone could expect from this story and is not done here, with the story that will cover it if there is one.]
 
 ## Plan
-[Cómo se va a construir, contado como a un cliente: qué podrá hacer el usuario al terminar cada paso. Sin detalles técnicos.]
+[How it will be built, told as to a customer: what the user will be able to do at the end of each step. No technical details.]
 
-## Sugerencias del orquestador
-[Qué considera el mejor camino y por qué; qué alternativas descartó. En lenguaje de cliente.]
+## Orchestrator's suggestions
+[What it considers the best path and why; which alternatives it ruled out. In the customer's language.]
 
-## Decisiones
-[Cada ambigüedad resuelta y cada supuesto de QA convertido en contrato (03 §8). Entra en el mismo PR que la usa. Ningún supuesto queda abierto al pasar a `Ready`.]
+## Decisions
+[Each ambiguity resolved and each QA assumption turned into contract (03 §8). It goes in the same PR that uses it. No assumption stays open when moving to `Ready`.]
 
-| ID | Pregunta | Opciones | Decisión | Quién y fecha | Impacto |
+| ID | Question | Options | Decision | Who and when | Impact |
 |---|---|---|---|---|---|
-| D-01 | | | | | Criterio nuevo/modificado, ADR o «ninguno» |
+| D-01 | | | | | New/changed criterion, ADR or "none" |
 
-## Riesgos
+## Risks
 
-## Cierre
-- Aceptación humana (fecha):
-- Defectos registrados (ID y severidad):
-- Qué se consolidó del plan técnico (catálogo de diseño, ADR):
+## Close
+- Human acceptance (date):
+- Defects recorded (ID and severity):
+- What was consolidated from the technical plan (design catalogue, ADR):
 
-## Historial de cambios
-| Fecha | Cambio | Motivo | Aprobador |
+## Change history
+| Date | Change | Reason | Approver |
 |---|---|---|---|

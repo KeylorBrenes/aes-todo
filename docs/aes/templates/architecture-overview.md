@@ -1,32 +1,32 @@
-# Architecture Overview — [Proyecto]
+# Architecture overview — [Project]
 
-## Contexto y límites
-[Propósito, actores, sistemas externos y límites de confianza.]
+## Context and boundaries
+[Purpose, actors, external systems and trust boundaries.]
 
-## Vista de componentes
-[Componentes principales y sus responsabilidades. Añadir diagrama si aporta claridad.]
+## Component view
+[Main components and their responsibilities. Add a diagram if it adds clarity.]
 
-## Dependencias y reglas
-[Dirección permitida de dependencias, propiedad de módulos y límites.]
+## Dependencies and rules
+[Allowed direction of dependencies, module ownership and boundaries.]
 
-## Datos
-[Entidades/conjuntos relevantes, propiedad, persistencia, retención y migraciones.]
+## Data
+[Relevant entities/data sets, ownership, persistence, retention and migrations.]
 
-## Interfaces e integraciones
-[APIs, eventos, contratos, servicios externos.]
+## Interfaces and integrations
+[APIs, events, contracts, external services.]
 
-## Seguridad y privacidad
-[Autenticación, autorización, secretos, datos sensibles y amenazas relevantes.]
+## Security and privacy
+[Authentication, authorization, secrets, sensitive data and relevant threats.]
 
-## Despliegue y operación
-[Entornos, configuración, monitoreo, backup/recuperación, cuando aplique.]
+## Deployment and operation
+[Environments, configuration, monitoring, backup/recovery, where they apply.]
 
-## Calidad no funcional
-[Rendimiento, disponibilidad, accesibilidad, compatibilidad, mantenibilidad.]
+## Non-functional quality
+[Performance, availability, accessibility, compatibility, maintainability.]
 
-## Restricciones y decisiones abiertas
-[Qué es obligatorio y qué todavía debe investigarse.]
+## Constraints and open decisions
+[What is mandatory and what still has to be investigated.]
 
-## ADRs relacionados
-| ID | Decisión | Estado |
+## Related ADRs
+| ID | Decision | Status |
 |---|---|---|

@@ -1,139 +1,140 @@
-# 08 — Definition of Ready y Definition of Done
+# 08 — Definition of Ready and Definition of Done
 
-Los proyectos SHOULD copiar estas checklists dentro de su repositorio (01 §2), para que los agentes las tengan sin salir de él.
+Projects SHOULD copy these checklists into their repository (01 §2), so that agents have them without leaving it.
 
-## 1. Definition of Ready (DoR) — Historia de Usuario o Enabler (T2/T3)
+## 1. Definition of Ready (DoR) — User story or enabler (T2/T3)
 
-Una historia puede pasar a `Ready` cuando:
+A story can become `Ready` when:
 
-- [ ] **la compuerta de estabilización está abierta**: no hay defectos abiertos de severidad Crítica, Alta o Media, y los Menores no superan el límite del perfil (02 §9);
-- [ ] el título tiene el formato de su tipo («Como… quiero… para…» en historias; «Para…, necesitamos…» en enablers) y declara `Requiere:` (02 §3);
-- [ ] la historia es **atómica** (una capacidad que se demuestra sola) y un **corte vertical** (02 §3.1–3.2), con menos de 8 puntos;
-- [ ] la historia está escrita en lenguaje de cliente; el detalle técnico está en el plan técnico (03 §1);
-- [ ] alcance y exclusiones relevantes están definidos;
-- [ ] criterios de aceptación son observables y verificables;
-- [ ] cada acción que escribe tiene criterio de fallo (03 §3);
-- [ ] ambigüedades materiales están resueltas y **registradas como decisiones** (03 §8);
-- [ ] **ningún supuesto de QA queda abierto**: cada uno es contrato o se rechazó (03 §5);
-- [ ] dependencias y riesgos relevantes están identificados;
-- [ ] prioridad, Story Points y track están asignados;
-- [ ] existe estrategia de aceptación y pruebas;
-- [ ] decisiones arquitectónicas necesarias están aprobadas; las convenciones que valen para más de una historia están en un ADR;
-- [ ] el contrato de interfaz está definido cuando la historia toca una frontera observable;
-- [ ] la suite de aceptación está escrita, aprobada por el responsable humano y protegida;
-- [ ] cada prueba lleva el ID de la historia y el de su criterio, y se deriva de un criterio aprobado (03 §6);
-- [ ] **RED confirmado** por herramienta: todas las pruebas nuevas se ejecutaron y fallaron por la razón esperada (05 §2.2), salvo las de caracterización, que están en la regresión de su historia dueña (05 §2.4);
-- [ ] las pruebas holdout existen cuando el track es T3 (o el perfil las exige);
-- [ ] «Fuera de alcance» no está vacío;
-- [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos;
-- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural;
-- [ ] la historia tiene **3 tareas como máximo** (04 §3); si no, se dividió.
+- [ ] **the stabilization gate is open**: there are no open defects of Critical, High or Medium severity, and the Minor ones do not exceed the profile's limit (02 §9);
+- [ ] the title has the format of its type ("As a… I want… so that…" for stories; "For…, we need…" for enablers) and declares `Depends on:` (02 §3);
+- [ ] the story is **atomic** (one capability that can be demonstrated on its own) and a **vertical slice** (02 §3.1–3.2), with fewer than 8 points;
+- [ ] the story is written in customer language; the technical detail is in the technical plan (03 §1);
+- [ ] scope and relevant exclusions are defined;
+- [ ] acceptance criteria are observable and verifiable;
+- [ ] every action that writes has a failure criterion (03 §3);
+- [ ] material ambiguities are resolved and **recorded as decisions** (03 §8);
+- [ ] **no QA assumption remains open**: each one is contract or was rejected (03 §5);
+- [ ] relevant dependencies and risks are identified;
+- [ ] priority, story points and track are assigned;
+- [ ] there is an acceptance and testing strategy;
+- [ ] the necessary architectural decisions are approved; conventions that apply to more than one story are in an ADR;
+- [ ] the interface contract is defined when the story touches an observable boundary;
+- [ ] the acceptance suite is written, approved by the human owner and protected;
+- [ ] each test carries the story's ID and its criterion's ID, and derives from an approved criterion (03 §6);
+- [ ] **RED confirmed** by a tool: every new test ran and failed for the expected reason (05 §2.2), except the characterization tests, which are in the regression suite of the story that owns them (05 §2.4);
+- [ ] holdout tests exist when the track is T3 (or the profile requires them);
+- [ ] "Out of scope" is not empty;
+- [ ] the tasks are written, with a change surface, the criteria they turn green and their model level, without inventing requirements;
+- [ ] each task has its design note (10 §5), decided from the design catalogue and the structural outline;
+- [ ] the story has **at most 3 tasks** (04 §3); otherwise, it was split.
 
-Si una casilla no aplica, se puede marcar `N/A` con justificación. No se debe forzar una historia a `Ready` por presión de planificación.
+If a box does not apply, it can be marked `N/A` with a justification. A story must not be forced into `Ready` because of planning pressure.
 
-## 2. Definition of Ready — T1 (defecto, chore, lote de estabilización)
+## 2. Definition of Ready — T1 (defect, chore, stabilization batch)
 
-- [ ] el elemento está en el backlog, con severidad e historia de origen si es defecto;
-- [ ] el criterio dice qué comportamiento es el correcto;
-- [ ] la comprobación de reproducción existe (prueba protegida o comando de verificación) y falla contra la base por la razón esperada, o el elemento declara «sin RED» con motivo y aprobación;
-- [ ] la superficie de cambio está publicada;
-- [ ] el responsable humano aprobó el PR de especificación.
+- [ ] the item is in the backlog, with a severity and the story of origin if it is a defect;
+- [ ] the criterion says which behaviour is correct;
+- [ ] the reproduction check exists (a protected test or a verification command) and fails against the base for the expected reason, or the item declares "no RED" with a reason and approval;
+- [ ] the change surface is published;
+- [ ] the human owner approved the specification PR.
 
-Para T0 basta con la tarea (§3).
+For T0 the task is enough (§3).
 
-## 3. Definition of Ready — Tarea
+## 3. Definition of Ready — Task
 
-Una tarea puede pasar a ejecución cuando:
+A task can start when:
 
-- [ ] pertenece a un elemento aprobado y en `Ready`;
-- [ ] su rama nace de `dev` (o de `main`, si es un hotfix: 07 §9);
-- [ ] tiene un resultado principal concreto;
-- [ ] alcance, exclusiones y restricciones están claros;
-- [ ] la superficie de cambio y la lista de criterios que deja en verde están publicadas en la rama protegida (la última tarea del elemento no necesita lista: ejecuta el elemento completo);
-- [ ] si introduce un estado, lista las transiciones que lo crean y lo limpian;
-- [ ] dependencias/contratos se conocen;
-- [ ] permisos del agente están definidos;
-- [ ] los comandos de validación exactos y las pruebas de regresión afectadas están listados;
-- [ ] el presupuesto de diff está estimado por separado para producción y pruebas;
-- [ ] la condición de finalización está definida;
-- [ ] el contexto necesario está disponible.
+- [ ] it belongs to an approved item in `Ready`;
+- [ ] its branch starts from `dev` (or from `main`, for a hotfix: 07 §9);
+- [ ] it has one concrete main result;
+- [ ] scope, exclusions and constraints are clear;
+- [ ] the change surface and the list of criteria it turns green are published on the protected branch (the item's last task needs no list: it runs the whole item);
+- [ ] if it introduces a state, it lists the transitions that create it and clear it;
+- [ ] dependencies/contracts are known;
+- [ ] the agent's permissions are defined;
+- [ ] the exact validation commands and the affected regression tests are listed;
+- [ ] the diff budget is estimated separately for production and tests;
+- [ ] its model level is set (standard, or a higher level with its reason: 06 §12.1);
+- [ ] the completion condition is defined;
+- [ ] the necessary context is available, and the environment check passes (`aes-doctor` in the reference implementation).
 
-## 4. Definition of Done — Tarea
+## 4. Definition of Done — Task
 
-Una tarea está técnicamente terminada cuando:
+A task is technically done when:
 
-- [ ] cumple el resultado especificado;
-- [ ] el baseline de pruebas se registró al inicio de la sesión;
-- [ ] el cambio está dentro de la superficie de cambio;
-- [ ] el diseño sigue la nota de diseño y no muestra síntomas del nivel 1 (10 §3);
-- [ ] las pruebas pertinentes se añadieron/actualizaron y ejecutaron;
-- [ ] lint, tipos y análisis requeridos pasan;
-- [ ] los commits separan cambios estructurales y conductuales;
-- [ ] el guardián de CI no reporta alertas, o cada alerta tiene justificación y aprobación de una persona autorizada;
-- [ ] la CI ejecutó lo que debía (confirmado en el log: criterios, número de pruebas);
-- [ ] se inspeccionó el diff y no hay cambios ajenos;
-- [ ] no se introdujeron secretos, artefactos temporales ni dependencias no aprobadas;
-- [ ] no quedan servidores, procesos ni datos del rol en el entorno (06 §10);
-- [ ] se entregó el reporte con evidencia ejecutada y bloqueos conocidos;
-- [ ] el verificador emitió `PASS` **antes de integrar**, y los hallazgos fuera de la tarea están registrados como defectos con severidad.
+- [ ] it meets the specified result;
+- [ ] the test baseline was recorded at the start of the session;
+- [ ] the change is within the change surface;
+- [ ] the design follows the design note and shows no level-1 symptoms (10 §3);
+- [ ] the relevant tests were added/updated and run;
+- [ ] the required lint, types and analysis pass;
+- [ ] the commits separate structural and behavioural changes;
+- [ ] the CI guard reports no alerts, or each alert has a justification and the approval of an authorized person;
+- [ ] CI ran what it had to (confirmed in the log: criteria, number of tests);
+- [ ] the diff was inspected and there are no unrelated changes;
+- [ ] no secrets, temporary artifacts or unapproved dependencies were introduced;
+- [ ] no servers, processes or data of the role remain in the environment (06 §10);
+- [ ] the report was delivered with executed evidence and known blockers;
+- [ ] the verifier issued `PASS` **before merging**, the findings were classified by origin, type and severity (02 §9.3), and the findings outside the task are recorded as defects with a severity.
 
-La tarea pasa a revisión; el programador no la marca como aceptada.
+The task moves to review; the programmer does not mark it as accepted.
 
-## 5. Definition of Done — Historia de Usuario o Enabler
+## 5. Definition of Done — User story or enabler
 
-Una historia puede pasar a `Ready for Acceptance` cuando:
+A story can become `Ready for Acceptance` when:
 
-- [ ] todas sus tareas están técnicamente terminadas e integradas;
-- [ ] todos los criterios de aceptación tienen evidencia PASS o una excepción formal aprobada;
-- [ ] pruebas unitarias, integración, contrato, E2E y regresión requeridas pasan;
-- [ ] controles estáticos y de seguridad aplicables pasan;
-- [ ] las pruebas holdout pasan, cuando existen;
-- [ ] el verificador independiente re-ejecutó las validaciones y emite `PASS`;
-- [ ] existe evidencia de la prueba manual agéntica cuando el track la exige (05 §11);
-- [ ] no quedan defectos Críticos ni bloqueantes conocidos;
-- [ ] cada hallazgo que no se corrigió está en el backlog como defecto, con severidad, historia de origen y criterio (02 §9);
-- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados con lo que el plan técnico tenía de valor futuro, y el plan técnico se eliminó (03 §1.2);
-- [ ] las vistas del backlog están regeneradas (02 §11);
-- [ ] el comportamiento existente relevante no sufrió regresiones;
-- [ ] el resultado puede probarse en un entorno apropiado.
+- [ ] all its tasks are technically done and merged;
+- [ ] every acceptance criterion has PASS evidence or an approved formal exception;
+- [ ] the required unit, integration, contract, E2E and regression tests pass;
+- [ ] the applicable static and security controls pass;
+- [ ] the holdout tests pass, when they exist;
+- [ ] the independent verifier re-ran the validations and issues `PASS`;
+- [ ] there is evidence of the agentic manual test when the track requires it (05 §11);
+- [ ] no Critical or blocking defects are known;
+- [ ] every finding that was not fixed is in the backlog as a defect, with a severity, story of origin and criterion (02 §9);
+- [ ] affected documentation/ADRs and the design catalogue (10 §6) are updated with what the technical plan had of future value, and the technical plan was deleted (03 §1.2);
+- [ ] the backlog views are regenerated (02 §11);
+- [ ] relevant existing behaviour did not regress;
+- [ ] the result can be tested in an appropriate environment.
 
-Después de eso:
+After that:
 
-- funcionalidades visibles o relevantes para el usuario pasan por aceptación humana según el perfil; aceptada, la historia queda en `dev` hasta el release (07 §8);
-- en T3, el responsable humano revisa el código de las zonas de riesgo (00 §8);
-- el responsable humano emite `Accepted` o `Rejected`;
-- solo entonces la historia se considera aceptada;
-- el cierre añade la historia a la regresión de la rama principal, y la CI del cierre confirma que sus pruebas se ejecutaron y pasaron;
-- en T2/T3, el orquestador ejecuta la retrospectiva compuesta (09 §3) y registra las métricas del elemento (09 §6);
-- antes de pasar a la siguiente historia se evalúa la compuerta de estabilización: si está cerrada, lo siguiente es un lote de estabilización (02 §9.4).
+- visible or user-relevant features go through human acceptance according to the profile; once accepted, the story stays in `dev` until the release (07 §8);
+- in T3, the human owner reviews the code in the risk areas (00 §8);
+- the human owner issues `Accepted` or `Rejected`;
+- only then is the story considered accepted;
+- the close adds the story to the main branch's regression suite, and the close's CI confirms that its tests ran and passed;
+- in T2/T3, the orchestrator runs the compound retrospective (09 §3) and records the item's metrics (09 §6);
+- before moving on to the next story the stabilization gate is evaluated: if it is closed, the next thing is a stabilization batch (02 §9.4).
 
-Un resultado `BLOCKED`, `NOT RUN` o una prueba omitida sin justificación no equivale a `PASS`.
+A `BLOCKED` or `NOT RUN` result, or a test skipped without justification, is not equivalent to `PASS`.
 
-## 6. Definition of Done — Lote de estabilización
+## 6. Definition of Done — Stabilization batch
 
-- [ ] cada defecto del lote tiene su comprobación en verde, ejecutada por la CI y por el verificador;
-- [ ] los defectos que no se corrigieron siguen abiertos, con el motivo;
-- [ ] las comprobaciones del lote están en la regresión de la rama principal;
-- [ ] el responsable humano aceptó el lote;
-- [ ] la compuerta de estabilización se volvió a evaluar.
+- [ ] each defect in the batch has its check green, run by CI and by the verifier;
+- [ ] the defects that were not fixed stay open, with the reason;
+- [ ] the batch's checks are in the main branch's regression suite;
+- [ ] the human owner accepted the batch;
+- [ ] the stabilization gate was evaluated again.
 
 ## 7. Definition of Done — Hotfix
 
-- [ ] cumple la DoD de un T1, con todas sus ramas nacidas de `main` e integradas en `main`;
-- [ ] la ruta por hotfix es una decisión registrada en el defecto;
-- [ ] el back-merge de `main` a `dev` está integrado, con merge commit y la regresión de `dev` en verde;
-- [ ] el defecto está en `Released`.
+- [ ] it meets the DoD of a T1, with all its branches started from `main` and merged into `main`;
+- [ ] the hotfix route is a decision recorded in the defect;
+- [ ] the back-merge from `main` to `dev` is merged, with a merge commit and `dev`'s regression suite green;
+- [ ] the defect is `Released`.
 
 ## 8. Definition of Done — Release
 
-- [ ] las notas del release están escritas (elementos, defectos conocidos, vuelta atrás);
-- [ ] la compuerta de estabilización está abierta sobre `dev`;
-- [ ] `main` está contenido en `dev`, comprobado por la CI;
-- [ ] la regresión completa pasa en el PR de release;
-- [ ] el responsable humano aprobó e integró el PR con merge commit;
-- [ ] los elementos incluidos están en `Released` y la versión está marcada;
-- [ ] el back-merge de `main` a `dev` está integrado.
+- [ ] the release notes are written (items, known defects, rollback);
+- [ ] the stabilization gate is open on `dev`;
+- [ ] `main` is contained in `dev`, checked by CI;
+- [ ] the full regression suite passes on the release PR;
+- [ ] the human owner approved and merged the PR with a merge commit;
+- [ ] the included items are `Released` and the version is marked;
+- [ ] the back-merge from `main` to `dev` is merged.
 
-## 9. Definition of Done del proyecto
+## 9. Project Definition of Done
 
-El proyecto puede declararse listo para una liberación cuando se cumplen sus gates de release, seguridad, migración, documentación, recuperación y aprobación definidos en el perfil. No basta con que todas las historias estén en estado `Accepted` si aún existen riesgos de liberación sin resolver o defectos abiertos por encima de lo que el perfil permite liberar.
+The project can be declared ready for a release when the release, security, migration, documentation, recovery and approval gates defined in the profile are met. All stories being `Accepted` is not enough if there are still unresolved release risks or open defects above what the profile allows to release.

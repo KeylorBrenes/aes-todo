@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# AES 1.3.0 — Checkouts propios por rol (standard/06 §10) con git worktree.
+# AES — Each role's own checkout (standard/06 §10) with git worktree.
 #
-# El checkout principal se queda siempre en `dev`. Cada rama de trabajo se abre en su propio
-# worktree, en .claude/worktrees/<rama con / cambiadas por ->. Una rama solo puede estar en un
-# worktree a la vez (regla de git): cierra el tuyo antes de delegar en la misma rama.
+# The main checkout always stays on `dev`. Each work branch is opened in its own
+# worktree, in .claude/worktrees/<branch with / changed to ->. A branch can only be in one
+# worktree at a time (a git rule): close yours before delegating on the same branch.
 #
-# Uso:
-#   aes-wt.sh open <rama> [<base>]   crea el worktree (y la rama desde <base>, por defecto origin/dev,
-#                                    si no existe) e imprime su ruta
-#   aes-wt.sh close <rama>           lo elimina si está limpio (los commits quedan en la rama)
-#   aes-wt.sh path <rama>            imprime la ruta (exista o no)
-#   aes-wt.sh run <rama> -- <cmd…>   abre, ejecuta <cmd> dentro y cierra
-#   aes-wt.sh delegate <rama>        prepara la delegación: el próximo subagente con
-#                                    `isolation: worktree` trabajará en <rama> (lo lee worktree-create.sh)
+# Usage:
+#   aes-wt.sh open <branch> [<base>]   creates the worktree (and the branch from <base>, origin/dev by default,
+#                                      if it does not exist) and prints its path
+#   aes-wt.sh close <branch>           removes it if it is clean (the commits stay on the branch)
+#   aes-wt.sh path <branch>            prints the path (whether it exists or not)
+#   aes-wt.sh run <branch> -- <cmd…>   opens, runs <cmd> inside and closes
+#   aes-wt.sh delegate <branch>        prepares the delegation: the next subagent with
+#                                      `isolation: worktree` will work on <branch> (read by worktree-create.sh)
 set -euo pipefail
 
-main_root() {  # raíz del checkout principal, aunque se llame desde un worktree
+main_root() {  # root of the main checkout, even when called from a worktree
   local common
   common=$(git rev-parse --path-format=absolute --git-common-dir)
   dirname "$common"
@@ -24,7 +24,7 @@ root=$(main_root)
 wt_dir="$root/.claude/worktrees"
 wt_path() { printf '%s/%s' "$wt_dir" "${1//\//-}"; }
 
-# Archivos locales no versionados que el rol necesita (06 §10). Añade aquí los de tu proyecto.
+# Unversioned local files the role needs (06 §10). Add your project's here.
 AES_WT_LOCAL_FILES=(.claude/settings.local.json)
 copy_local_files() {
   local dest="$1" f
@@ -37,7 +37,7 @@ copy_local_files() {
 cmd="${1:-}"; branch="${2:-}"
 case "$cmd" in
   open)
-    [[ -n "$branch" ]] || { echo "Uso: aes-wt.sh open <rama> [<base>]" >&2; exit 2; }
+    [[ -n "$branch" ]] || { echo "Usage: aes-wt.sh open <branch> [<base>]" >&2; exit 2; }
     base="${3:-origin/dev}"
     path=$(wt_path "$branch")
     if [[ -d "$path" ]]; then echo "$path"; exit 0; fi
@@ -54,26 +54,26 @@ case "$cmd" in
     echo "$path"
     ;;
   close)
-    [[ -n "$branch" ]] || { echo "Uso: aes-wt.sh close <rama>" >&2; exit 2; }
+    [[ -n "$branch" ]] || { echo "Usage: aes-wt.sh close <branch>" >&2; exit 2; }
     path=$(wt_path "$branch")
     [[ -d "$path" ]] || exit 0
-    for f in "${AES_WT_LOCAL_FILES[@]}"; do rm -f "${path:?}/$f"; done   # copias locales, en .gitignore
+    for f in "${AES_WT_LOCAL_FILES[@]}"; do rm -f "${path:?}/$f"; done   # local copies, in .gitignore
     if [[ -n "$(git -C "$path" status --porcelain)" ]]; then
-      echo "AES: $path tiene cambios sin commit; no se elimina. Revísalos antes de cerrar." >&2
+      echo "AES: $path has uncommitted changes; it is not removed. Review them before closing." >&2
       copy_local_files "$path"; exit 1
     fi
     git -C "$root" worktree remove "$path"
-    # En Windows, la carpeta vacía puede quedar un momento bloqueada (antivirus, indexador).
+    # On Windows, the empty folder may stay locked for a moment (antivirus, indexer).
     for _ in 1 2 3; do [[ -d "$path" ]] || break; rm -rf "${path:?}" 2>/dev/null || sleep 1; done
     if [[ -d "$path" ]]; then
-      echo "AES: git ya cerró el worktree, pero la carpeta $path sigue ahí (en Windows, porque un proceso o una terminal tiene su directorio actual dentro). Sal de ella y bórrala: rm -rf \"$path\"" >&2
+      echo "AES: git already closed the worktree, but the folder $path is still there (on Windows, because a process or a terminal has its current directory inside it). Leave it and delete it: rm -rf \"$path\"" >&2
     fi
     ;;
   path)
     wt_path "$branch"; echo
     ;;
   run)
-    [[ -n "$branch" && "${3:-}" == "--" ]] || { echo "Uso: aes-wt.sh run <rama> -- <cmd…>" >&2; exit 2; }
+    [[ -n "$branch" && "${3:-}" == "--" ]] || { echo "Usage: aes-wt.sh run <branch> -- <cmd…>" >&2; exit 2; }
     shift 3
     path=$("$0" open "$branch")
     status=0
@@ -82,17 +82,17 @@ case "$cmd" in
     exit $status
     ;;
   delegate)
-    [[ -n "$branch" ]] || { echo "Uso: aes-wt.sh delegate <rama>" >&2; exit 2; }
+    [[ -n "$branch" ]] || { echo "Usage: aes-wt.sh delegate <branch>" >&2; exit 2; }
     if [[ -d "$(wt_path "$branch")" ]]; then
-      echo "AES: la rama $branch ya está abierta en $(wt_path "$branch"). Ciérrala (aes-wt.sh close) antes de delegar." >&2
+      echo "AES: the branch $branch is already open in $(wt_path "$branch"). Close it (aes-wt.sh close) before delegating." >&2
       exit 1
     fi
     git -C "$root" show-ref --verify --quiet "refs/heads/$branch" || {
-      echo "AES: la rama $branch no existe todavía. Créala con aes-wt.sh open y ciérrala, o con git branch." >&2; exit 1; }
+      echo "AES: the branch $branch does not exist yet. Create it with aes-wt.sh open and close it, or with git branch." >&2; exit 1; }
     mkdir -p "$root/.aes"
     printf '%s\n' "$branch" > "$root/.aes/next-branch"
-    echo "Delegación preparada: el próximo subagente trabajará en $branch."
+    echo "Delegation prepared: the next subagent will work on $branch."
     ;;
   *)
-    echo "Uso: aes-wt.sh open|close|path|run|delegate <rama> …" >&2; exit 2 ;;
+    echo "Usage: aes-wt.sh open|close|path|run|delegate <branch> …" >&2; exit 2 ;;
 esac

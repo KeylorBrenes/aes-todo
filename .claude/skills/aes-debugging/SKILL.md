@@ -1,47 +1,47 @@
 ---
 name: aes-debugging
-description: Depuración por causa raíz dentro de AES. Úsala ante cualquier fallo antes de proponer un arreglo — prueba roja, CI roja, ciclo FAIL del verificador, defecto (BUG-NNN), prueba inestable o comportamiento inesperado — aunque parezca simple.
+description: Root-cause debugging inside AES. Use it on any failure before proposing a fix — a red test, red CI, a verifier FAIL cycle, a defect (BUG-NNN), a flaky test or unexpected behaviour — even if it looks simple.
 ---
 
-# Depuración por causa raíz (AES)
+# Root-cause debugging (AES)
 
-Técnica para el programador (y el mecánico) en ciclos `FAIL` y defectos, y para el orquestador al clasificar un fallo. Basada en `systematic-debugging` de [obra/superpowers](https://github.com/obra/superpowers) (MIT), adaptada a los gates de AES.
+A technique for the programmer (and the mechanic) in `FAIL` cycles and defects, and for the orchestrator when classifying a failure. Based on `systematic-debugging` from [obra/superpowers](https://github.com/obra/superpowers) (MIT), adapted to the AES gates.
 
-## Regla
-**Ningún arreglo sin causa raíz.** Un cambio que hace desaparecer el síntoma sin explicar por qué ocurría no es un arreglo: es un ciclo `FAIL` aplazado.
+## Rule
+**No fix without a root cause.** A change that makes the symptom disappear without explaining why it happened is not a fix: it is a postponed `FAIL` cycle.
 
-## 1. Reproducir con evidencia
-- Lee el error **completo**: mensaje, traza, salida de la CI. No un resumen.
-- Reprodúcelo con un comando. Si es un defecto, la reproducción ya existe: es la comprobación con RED del elemento (prueba o `.verify`). Si es un fallo de tu tarea, escribe primero la prueba técnica que falla por esa razón.
-- Si no se reproduce de forma consistente, no adivines: reúne más datos (más corridas, más contexto) y dilo en tu reporte.
+## 1. Reproduce with evidence
+- Read the **whole** error: message, stack trace, CI output. Not a summary.
+- Reproduce it with a command. If it is a defect, the reproduction already exists: it is the item's check with RED (test or `.verify`). If it is a failure of your task, first write the technical test that fails for that reason.
+- If it does not reproduce consistently, do not guess: gather more data (more runs, more context) and say so in your report.
 
-## 2. Investigar
-- **Qué cambió:** `git log` y `git diff` contra la base de la rama; dependencias, configuración, entorno.
-- **Hacia atrás:** sigue el valor incorrecto hasta su origen, no hasta donde explota.
-- **En las fronteras:** si hay varios componentes (UI → API → base de datos), mira qué entra y qué sale de cada uno hasta encontrar dónde se rompe. Si añades registros de diagnóstico, son temporales: no llegan al commit.
-- **Compara con lo que funciona:** busca código parecido del mismo proyecto que sí funciona y lista las diferencias.
+## 2. Investigate
+- **What changed:** `git log` and `git diff` against the branch's base; dependencies, configuration, environment.
+- **Backwards:** follow the wrong value to its origin, not to where it blows up.
+- **At the boundaries:** if there are several components (UI → API → database), look at what goes into and out of each one until you find where it breaks. If you add diagnostic logging, it is temporary: it does not reach the commit.
+- **Compare with what works:** look for similar code in the same project that does work and list the differences.
 
-## 3. Una hipótesis a la vez
-- Escribe la hipótesis: «la causa es X porque Y».
-- Compruébala con el cambio más pequeño posible, una variable a la vez.
-- Si falla, descártala y formula otra. No acumules cambios.
+## 3. One hypothesis at a time
+- Write the hypothesis: "the cause is X because Y".
+- Test it with the smallest possible change, one variable at a time.
+- If it fails, discard it and form another. Do not pile up changes.
 
-## 4. Arreglar
-- El arreglo ataca la causa raíz, en un solo cambio, **dentro de la superficie de la tarea**. Si la causa está fuera de la superficie o en una prueba protegida, detente: `BLOCKED`, con la causa y la evidencia.
-- La reproducción del paso 1 pasa de roja a verde, y el resto de las validaciones siguen en verde.
-- Nada de cambios «de paso», ni de silenciar el error (`catch` vacío, reintentos sin causa, aserciones debilitadas).
+## 4. Fix
+- The fix attacks the root cause, in a single change, **inside the task's surface**. If the cause is outside the surface or in a protected test, stop: `BLOCKED`, with the cause and the evidence.
+- The reproduction from step 1 goes from red to green, and the rest of the validations stay green.
+- No changes "while you are at it", and no silencing the error (empty `catch`, retries without a cause, weakened assertions).
 
-## 5. Cuándo parar
-- Si dos hipótesis seguidas fallan, o el arreglo exige tocar varias piezas que no deberían estar relacionadas, **detente** y repórtalo: puede ser un problema de diseño, y eso lo decide el orquestador (nota de diseño) o el humano. No pruebes «una cosa más».
-- Cada intento que llega a la CI o al verificador cuenta para el circuit breaker de la tarea (3 ciclos `FAIL`, AES 04 §9).
+## 5. When to stop
+- If two hypotheses in a row fail, or the fix requires touching several pieces that should not be related, **stop** and report it: it may be a design problem, and that is decided by the orchestrator (design note) or the human. Do not try "one more thing".
+- Each attempt that reaches CI or the verifier counts toward the task's circuit breaker (3 `FAIL` cycles, AES 04 §9).
 
-## Pruebas inestables
-- Una prueba que falla a veces tiene una causa: orden, datos compartidos, tiempo, estado que dejó otra prueba. Búscala igual que cualquier otra.
-- No se arregla con esperas fijas (`sleep`): se espera a la **condición** (un elemento visible, una respuesta, un archivo).
-- Si la prueba es de aceptación, es protegida: el programador no la toca. Repórtala como defecto; la corrige QA (AES 05 §6).
+## Flaky tests
+- A test that fails sometimes has a cause: order, shared data, time, state left by another test. Look for it like any other.
+- It is not fixed with fixed waits (`sleep`): wait for the **condition** (a visible element, a response, a file).
+- If the test is an acceptance test, it is protected: the programmer does not touch it. Report it as a defect; QA fixes it (AES 05 §6).
 
-## Señales de que te saltaste el proceso
-«Pruebo cambiando X a ver qué pasa», «seguro es Y», «un intento más», arreglar sin haber visto el error fallar. Vuelve al paso 1.
+## Signs you skipped the process
+"I'll try changing X and see what happens", "it must be Y", "one more attempt", fixing without having seen the error fail. Go back to step 1.
 
-## En el reporte
-Síntoma, reproducción (comando y salida), causa raíz y evidencia, arreglo, y la reproducción en verde. Si no encontraste la causa, dilo: qué investigaste, qué descartaste y qué falta.
+## In the report
+Symptom, reproduction (command and output), root cause and evidence, fix, and the reproduction in green. If you did not find the cause, say so: what you investigated, what you ruled out and what is missing. The report is written in the project's language (`AES_LANG`).

@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# AES — funciones compartidas por los hooks. Se carga con: source "$(dirname "$0")/lib.sh"
+# AES — functions shared by the hooks. Loaded with: source "$(dirname "$0")/lib.sh"
 
-# Rutas que ningún rol de implementación puede tocar (se usa en role-guard.sh).
+# Paths no implementation role can touch (used in role-guard.sh).
 # shellcheck disable=SC2034
 AES_PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
 
-# Lee la entrada JSON del hook una sola vez.
+# Reads the hook's JSON input once.
 aes_read_input() { AES_INPUT=$(cat); }
 aes_get() { jq -r "$1 // empty" <<< "$AES_INPUT"; }
 
-# Rol: vacío = sesión principal (orquestador). Si no, el nombre del subagente.
+# Role: empty = main session (orchestrator). Otherwise, the subagent's name.
 aes_role() { aes_get '.agent_type'; }
 
-# Normaliza una ruta (Windows o POSIX) a forma con "/" y sin "./".
+# Normalizes a path (Windows or POSIX) to a form with "/" and without "./".
 aes_norm() { local p="${1//\\//}"; printf '%s' "${p#./}"; }
 
-# Raíz del repositorio que contiene una ruta (o el cwd del hook).
+# Root of the repository that contains a path (or the hook's cwd).
 aes_repo_root() {
   local dir="$1"
   [[ -d "$dir" ]] || dir=$(dirname "$dir")
@@ -23,21 +23,21 @@ aes_repo_root() {
   git -C "$dir" rev-parse --show-toplevel 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null
 }
 
-# Convierte una ruta absoluta en relativa a la raíz del repo (comparación sin distinguir mayúsculas,
-# porque en Windows "h:/" y "H:/" son la misma unidad). Imprime vacío si está fuera del repo.
+# Turns an absolute path into one relative to the repo's root (case-insensitive comparison,
+# because on Windows "h:/" and "H:/" are the same drive). Prints nothing if it is outside the repo.
 aes_rel_path() {
   local file root lf lr
   file=$(aes_norm "$1"); root=$(aes_norm "$2")
-  # Git Bash puede devolver /h/Proyectos en lugar de H:/Proyectos: unificar.
+  # Git Bash may return /h/Projects instead of H:/Projects: unify.
   if [[ "$root" =~ ^/([a-zA-Z])/(.*)$ ]]; then root="${BASH_REMATCH[1]}:/${BASH_REMATCH[2]}"; fi
   if [[ "$file" =~ ^/([a-zA-Z])/(.*)$ ]]; then file="${BASH_REMATCH[1]}:/${BASH_REMATCH[2]}"; fi
-  # Ruta relativa: ya es relativa al repo.
+  # Relative path: it is already relative to the repo.
   if [[ ! "$file" =~ ^([a-zA-Z]:)?/ ]]; then printf '%s' "$file"; return; fi
   lf=$(tr '[:upper:]' '[:lower:]' <<< "$file"); lr=$(tr '[:upper:]' '[:lower:]' <<< "$root")
   if [[ "$lf" == "$lr"/* ]]; then printf '%s' "${file:${#root}+1}"; fi
 }
 
-# Rama actual y archivo .scope asociado (task/<ID>/<TASK> → specs/<ID>/<TASK>.scope).
+# Current branch and its .scope file (task/<ID>/<TASK> → specs/<ID>/<TASK>.scope).
 aes_branch() { git -C "$1" rev-parse --abbrev-ref HEAD 2>/dev/null; }
 aes_scope_file() {
   local branch="$1"
@@ -46,22 +46,22 @@ aes_scope_file() {
   fi
 }
 
-# ¿La ruta relativa coincide con algún glob del .scope?
+# Does the relative path match any glob in the .scope?
 aes_in_scope() {
   local rel="$1" scope="$2" glob
   while IFS= read -r glob || [[ -n "$glob" ]]; do
     glob="${glob%%#*}"; glob="${glob//[[:space:]]/}"; glob="${glob//$'\r'/}"
     [[ -z "$glob" ]] && continue
-    # shellcheck disable=SC2053  # el glob debe evaluarse como patrón
+    # shellcheck disable=SC2053  # the glob must be evaluated as a pattern
     [[ "$rel" == $glob ]] && return 0
   done < "$scope"
   return 1
 }
 
-aes_block() { printf 'AES [%s]: %s\n' "${AES_ROLE:-orquestador}" "$*" >&2; exit 2; }
+aes_block() { printf 'AES [%s]: %s\n' "${AES_ROLE:-orchestrator}" "$*" >&2; exit 2; }
 
-# ¿Hay un proceso escuchando en el puerto? Linux: /proc/net/tcp(6) (no depende de ss/netstat).
-# Windows/macOS: netstat. Lo usan subagent-gate.sh y .claude/scripts/aes-oc.sh.
+# Is a process listening on the port? Linux: /proc/net/tcp(6) (does not depend on ss/netstat).
+# Windows/macOS: netstat (whose output may be localized: ESCUCHANDO). Used by subagent-gate.sh and .claude/scripts/aes-oc.sh.
 port_listening() {
   local port="$1" hex
   if [[ -r /proc/net/tcp ]]; then

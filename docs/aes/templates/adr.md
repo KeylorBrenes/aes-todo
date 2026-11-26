@@ -1,25 +1,25 @@
-# ADR-[NNN]: [Título]
+# ADR-[NNN]: [Title]
 
-- **Estado:** Proposed / Accepted / Superseded / Rejected
-- **Fecha:** YYYY-MM-DD
-- **Responsable:** [rol]
-- **Aprobador:** [rol, si aplica]
+- **Status:** Proposed / Accepted / Superseded / Rejected
+- **Date:** YYYY-MM-DD
+- **Owner:** [role]
+- **Approver:** [role, if applicable]
 
-## Contexto
-[Problema, fuerzas y restricciones que motivan la decisión.]
+## Context
+[Problem, forces and constraints that motivate the decision.]
 
-## Decisión
-[Qué se decidió y por qué.]
+## Decision
+[What was decided and why.]
 
-## Alternativas consideradas
-| Alternativa | Ventajas | Costes/riesgos |
+## Alternatives considered
+| Alternative | Advantages | Costs/risks |
 |---|---|---|
 
-## Consecuencias
-[Impacto positivo y negativo; migración, operación, seguridad y mantenimiento.]
+## Consequences
+[Positive and negative impact; migration, operation, security and maintenance.]
 
-## Reversibilidad y riesgos
-[Qué tan difícil es cambiar la decisión y qué podría salir mal.]
+## Reversibility and risks
+[How hard it is to change the decision and what could go wrong.]
 
-## Referencias
-[Historias, PRs, documentos, pruebas.]
+## References
+[Stories, PRs, documents, tests.]

@@ -1,44 +1,46 @@
 ---
 name: aes-design-note
-description: Cómo escribe el orquestador AES la nota de diseño de cada tarea T2/T3 (AES 10 §5), y cómo responde una pregunta de diseño del programador. Úsala al dividir una historia en tareas antes de Ready, o cuando un programador termina con BLOCKED por una duda de diseño.
+description: How the AES orchestrator writes the design note of each T2/T3 task (AES 10 §5), and how it answers a programmer's design question. Use it when splitting a story into tasks before Ready, or when a programmer ends with BLOCKED over a design question.
 ---
 
-# Nota de diseño (AES)
+# Design note (AES)
 
-Eres el diseñador senior del equipo. El programador seguirá la nota al pie de la letra y no añadirá nada que no diga; el verificador revisará el diff contra ella. Lo que no escribas, no existe; lo que escribas con ambigüedad, se interpreta de la forma más fácil.
+You are the team's senior designer. The programmer will follow the note to the letter and will add nothing it does not say; the verifier will review the diff against it. What you do not write does not exist; what you write ambiguously is interpreted the easiest way.
 
-## 1. Reúne hechos (no descripciones)
-- La historia, sus criterios y el contrato de interfaz.
-- `docs/design-catalog.md`: patrones en uso y lo que ya se decidió **no** usar.
-- Los ADR que apliquen.
-- El resumen estructural de lo que toca la historia:
-  `bash .claude/scripts/aes-outline.sh origin/dev <rutas>`
-  Si el proyecto usa un grafo de código (por ejemplo, Graphify), consúltalo para dependencias e impactos, y cuenta como hechos **solo** las relaciones extraídas del código, no las inferidas.
-- Si respondes a una pregunta del programador: su pregunta, más los mismos hechos. No su descripción de cómo está el código.
+The note is written in the project's language (`AES_LANG`).
 
-## 2. Decide el nivel 2 con una pregunta
-Para cada posible patrón o abstracción (AES 10 §4):
-1. ¿Qué **razón presente** lo justifica: variantes que ya existen, historias del backlog que lo piden o un ADR?
-2. Si se respeta el nivel 1, ¿cuánto costaría añadirlo después?
+## 1. Gather facts (not descriptions)
+- The story, its criteria and the interface contract.
+- `docs/design-catalog.md`: patterns in use and what has already been decided **not** to use.
+- The ADRs that apply.
+- The structural outline of what the story touches:
+  `bash .claude/scripts/aes-outline.sh origin/dev <paths>`
+  If the project uses a code graph (for example, Graphify), consult it for dependencies and impact, and count as facts **only** the relationships extracted from the code, not the inferred ones.
+- If you are answering a programmer's question: their question, plus the same facts. Not their description of how the code is.
 
-Sin razón presente, o con un costo bajo de añadirlo después: **no se usa**, y se escribe en «Lo que no se hace». Elegir no usar un patrón es una decisión con el mismo peso que usarlo.
+## 2. Decide level 2 with one question
+For each possible pattern or abstraction (AES 10 §4):
+1. What **present reason** justifies it: variants that already exist, backlog stories that ask for it or an ADR?
+2. If level 1 is respected, how much would it cost to add it later?
 
-## 3. Escribe la nota (plantilla `templates/design-note.md`)
-- **Piezas:** archivo, tipo o función; si es nueva o existente; **una** responsabilidad cada una.
-- **Patrón:** el elegido con su razón presente, o «ninguno» y por qué basta el código directo.
-- **Lo que no se hace:** una línea por tentación previsible. Por ejemplo: «no se crea interfaz para `ExpenseService`: una sola implementación», «no se generaliza el formulario para otras entidades», «no se toca `Program.cs` salvo para registrar el endpoint».
-- **Nivel 1 donde no es obvio:** dónde termina la lógica y empieza la entrada/salida; qué dependencias se reciben y por dónde; dónde vive el acceso a datos de esta funcionalidad; en qué frontera se valida y a qué tipo se convierte.
-- **Bordes de la API** (si la tarea añade o cambia rutas): para cada prefijo, qué responden un método no permitido, una ruta desconocida y la barra final, con qué cuerpo, y qué fallback lo cubre. Por defecto los frameworks responden sin el cuerpo del contrato, y el verificador lo prueba.
-- **Comportamiento dinámico de la interfaz** (si la tarea tiene UI): una fila por transición de estado con dónde queda el foco, qué se anuncia y en qué región viva, y si se ve el anillo de foco (con teclado, con ratón o nunca, según el tipo de elemento y `DESIGN.md`); qué regiones vivas están montadas desde la carga; si un mensaje reserva espacio; y qué respuestas deben cubrir las pruebas técnicas (también el éxito con cuerpo inesperado). Consulta el catálogo: lo que ya se decidió en otra pantalla se cita, no se rediseña. Si impeccable está registrada, el resumen de su `shape` es la fuente de los estados.
-- **Catálogo:** si la nota introduce un patrón o un «no» nuevo, anótalo para actualizar `docs/design-catalog.md` en el cierre.
+With no present reason, or with a low cost of adding it later: **it is not used**, and it is written under "What is not done". Choosing not to use a pattern is a decision with the same weight as using it.
 
-## 4. Revisa antes de publicarla
-- ¿Cada pieza tiene **una** responsabilidad, nombrada sin «y»?
-- ¿Hay algún patrón sin razón presente? Quítalo.
-- ¿Lo que no se hace cubre lo que un programador junior añadiría «por si acaso»?
-- ¿La nota cabe en la superficie de cambio de la tarea? Si exige tocar más, la superficie o la división en tareas está mal.
-- ¿Queda alguna decisión que el programador tendría que improvisar y el verificador va a probar (foco, anuncios, cuerpo de un error, una respuesta inesperada)? Escríbela: cada una que falta es un ciclo FAIL probable.
-- ¿Contradice el catálogo o un ADR? Entonces es una decisión nueva: regístrala (D-NN) o propón un ADR.
+## 3. Write the note (template `templates/design-note.md`)
+- **Pieces:** file, type or function; whether it is new or existing; **one** responsibility each.
+- **Pattern:** the one chosen with its present reason, or "none" and why direct code is enough.
+- **What is not done:** one line per foreseeable temptation. For example: "no interface is created for `ExpenseService`: a single implementation", "the form is not generalized for other entities", "`Program.cs` is not touched except to register the endpoint".
+- **Level 1 where it is not obvious:** where the logic ends and input/output begins; which dependencies are received and through where; where this feature's data access lives; at which boundary it is validated and to which type it is converted.
+- **API edges** (if the task adds or changes routes): for each prefix, what an unsupported method, an unknown route and the trailing slash return, with which body, and which fallback covers it. By default frameworks respond without the contract's body, and the verifier tests it.
+- **Dynamic behaviour of the interface** (if the task has UI): one row per state transition with where focus goes, what is announced and in which live region, and whether the focus ring shows (with keyboard, with mouse or never, according to the type of element and `DESIGN.md`); which live regions are mounted from page load; whether a message reserves space; and which responses the technical tests must cover (also a success with an unexpected body). Consult the catalogue: what was already decided on another screen is cited, not redesigned. If impeccable is registered, the summary of its `shape` is the source of the states.
+- **Catalogue:** if the note introduces a new pattern or a new "no", note it to update `docs/design-catalog.md` at close.
 
-## Lo que esta skill no hace
-No decide requisitos (son del humano), no lee implementaciones para decidir, y no sustituye al verificador: él comprueba que el código siga la nota.
+## 4. Review it before publishing it
+- Does each piece have **one** responsibility, named without "and"?
+- Is there any pattern without a present reason? Remove it.
+- Does "what is not done" cover what a junior programmer would add "just in case"?
+- Does the note fit in the task's change surface? If it requires touching more, the surface or the split into tasks is wrong.
+- Is there any decision the programmer would have to improvise and the verifier is going to test (focus, announcements, the body of an error, an unexpected response)? Write it: each one missing is a likely FAIL cycle.
+- Does it contradict the catalogue or an ADR? Then it is a new decision: record it (D-NN) or propose an ADR.
+
+## What this skill does not do
+It does not decide requirements (they are the human's), it does not read implementations to decide, and it does not replace the verifier: the verifier checks that the code follows the note.

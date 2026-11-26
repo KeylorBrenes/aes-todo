@@ -1,0 +1,24 @@
+AES (Agentic Engineering Standard) is dual-licensed.
+
+Copyright (c) 2026 Keylor Brenes
+
+1. Code: MIT License (see LICENSE-MIT.txt)
+
+   Everything that is executed:
+   - scripts/
+   - .github/workflows/
+   - in profiles/reference/*/: .claude/scripts/, .claude/hooks/, ci/, .github/workflows/,
+     .opencode/, opencode.json and .claude/settings*.json
+
+2. Everything else: Creative Commons Attribution 4.0 International (CC BY 4.0)
+   (see LICENSE-CC-BY-4.0.txt, or https://creativecommons.org/licenses/by/4.0/)
+
+   The standard (standard/, AES-CORE.md), templates, agent contracts, skills, profiles' documents,
+   RFCs, the case study, images and the rest of the documentation.
+
+   Attribution: "Agentic Engineering Standard (AES) by Keylor Brenes,
+   https://github.com/KeylorBrenes/AES---Agent-Method, licensed under CC BY 4.0".
+   Indicate if you made changes.
+
+Projects that install AES get copies of both kinds of files. Adapting them inside your project is
+expected and allowed; keep this notice with the files you copy (docs/aes/ in an installed project).

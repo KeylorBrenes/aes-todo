@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# AES 1.3.0 — WorktreeRemove: cierra el worktree del subagente al terminar.
-# Los commits quedan en la rama de trabajo; solo se elimina el directorio. Si quedaron cambios
-# sin commit, el worktree se conserva para que el orquestador los revise (no se pierde nada).
+# AES — WorktreeRemove: closes the subagent's worktree when it finishes.
+# The commits stay on the work branch; only the directory is removed. If uncommitted changes
+# were left, the worktree is kept so the orchestrator can review them (nothing is lost).
 set -uo pipefail
 
 input=$(cat)
@@ -14,6 +14,6 @@ branch=$(git -C "$path" rev-parse --abbrev-ref HEAD 2>/dev/null)
 if bash "$root/.claude/scripts/aes-wt.sh" close "$branch"; then
   rm -f "$root/.aes/active-worktree"
 else
-  echo "AES worktree-remove: $path se conserva (cambios sin commit)." >&2
+  echo "AES worktree-remove: $path is kept (uncommitted changes)." >&2
 fi
 exit 0

@@ -1,29 +1,29 @@
-# REL-[NNN] — [Versión, p. ej. v1.4.0]
+# REL-[NNN] — [Version, e.g. v1.4.0]
 
-- **Fecha:**
-- **PR de release:** `dev` → `main` #[n] (merge commit)
-- **Aprobado e integrado por:** [responsable humano]
+- **Date:**
+- **Release PR:** `dev` → `main` #[n] (merge commit)
+- **Approved and merged by:** [human owner]
 
-## Qué sale
-| Elemento | Título | Estado tras el release |
+## What ships
+| Item | Title | Status after the release |
 |---|---|---|
 | US-[NNN] | | Released |
 
-## Defectos conocidos que quedan abiertos
-[Solo Menores dentro del límite: la compuerta no deja liberar con Críticos, Altos o Medios.]
+## Known defects that stay open
+[Only Minor defects within the limit: the gate does not allow releasing with Critical, High or Medium defects.]
 
-| Defecto | Severidad | Historia de origen | Ruta prevista |
+| Defect | Severity | Story of origin | Planned route |
 |---|---|---|---|
 
-## Migraciones y configuración
-[Cambios de esquema, variables de entorno, pasos manuales. «Ninguno» si no hay.]
+## Migrations and configuration
+[Schema changes, environment variables, manual steps. "None" if there are none.]
 
-## Cómo volver atrás
-[Revertir el merge commit del release, restaurar respaldo, desactivar algo en el entorno… Concreto.]
+## How to roll back
+[Revert the release's merge commit, restore a backup, turn something off in the environment… Concrete.]
 
-## Comprobaciones
-- [ ] Compuerta de estabilización abierta sobre `dev`
-- [ ] `main` contenido en `dev` (comprobado por la CI)
-- [ ] Regresión completa en verde en el PR de release
-- [ ] Back-merge `main` → `dev` integrado después del release
-- [ ] Versión marcada (tag)
+## Checks
+- [ ] Stabilization gate open on `dev`
+- [ ] `main` contained in `dev` (checked by CI)
+- [ ] Full regression green on the release PR
+- [ ] Back-merge `main` → `dev` merged after the release
+- [ ] Version marked (tag)

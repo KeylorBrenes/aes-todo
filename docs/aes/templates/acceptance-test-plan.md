@@ -1,65 +1,65 @@
-# Acceptance Test Plan — [US/EN/BUG/ST]-[NNN]
+# Acceptance test plan — [US/EN/BUG/ST]-[NNN]
 
-- **Versión de la historia:**
+- **Story version:**
 - **Track:** T1 / T2 / T3
-- **Preparado por:** QA / Test Designer
-- **Estado:** Draft / Approved / Protected
+- **Prepared by:** QA / test designer
+- **Status:** Draft / Approved / Protected
 
-## Fuente contractual
-[Enlace o referencia exacta a historia, criterios aprobados y contrato de interfaz.]
+## Contractual source
+[Link or exact reference to the story, the approved criteria and the interface contract.]
 
-## Matriz de trazabilidad
-Cada prueba lleva las etiquetas del elemento y del criterio (`@US-[NNN]`, `@US-[NNN]-AC-NN`) y el ID del criterio al inicio del título. Toda prueba se deriva de un criterio aprobado.
+## Traceability matrix
+Each test carries the item's and the criterion's tags (`@US-[NNN]`, `@US-[NNN]-AC-NN`) and the criterion ID at the start of the title. Every test derives from an approved criterion.
 
-| Criterio | Prueba (título) | Tipo | Visible/holdout | Automatizado/manual | Evidencia esperada |
+| Criterion | Test (title) | Type | Visible/holdout | Automated/manual | Expected evidence |
 |---|---|---|---|---|---|
 
-## Pruebas de caracterización
-[Criterios cuyo comportamiento ya existe: no pueden demostrar RED. Viven en la suite de la historia dueña, con su etiqueta, y corren en la regresión (05 §2.4). Omitir si no hay.]
+## Characterization tests
+[Criteria whose behaviour already exists: they cannot show RED. They live in the owning story's suite, with its tag, and run in the regression suite (05 §2.4). Omit if there are none.]
 
-| Criterio nuevo | Prueba | Suite / etiqueta dueña | Motivo |
+| New criterion | Test | Owning suite / tag | Reason |
 |---|---|---|---|
 
-## Escenarios
-Para cada escenario documentar precondiciones, datos sintéticos, acción (a través del contrato de interfaz), resultado esperado y limpieza.
+## Scenarios
+For each scenario document the preconditions, synthetic data, action (through the interface contract), expected result and clean-up.
 
-Aislamiento (05 §2.5): cada prueba crea sus datos y los busca por una marca propia; no compara conteos ni totales globales; no depende del orden ni de un modo serie.
+Isolation (05 §2.5): each test creates its data and finds it by a marker of its own; it does not compare global counts or totals; it does not depend on order or on a serial mode.
 
-## Casos negativos y límites
+## Negative and boundary cases
 
-## Seguridad/autorización
+## Security/authorization
 
-## Regresión relevante
+## Relevant regression
 
-## Automatización y entorno
-[Framework, comandos, dependencias y configuración.]
+## Automation and environment
+[Framework, commands, dependencies and configuration.]
 
-## Supuestos que requieren decisión
-[Todo lo que hubo que suponer porque el contrato no lo dice: tipo de control, formato, comportamiento en un caso límite. El orquestador los lleva al humano antes de `Ready`; cada respuesta es una decisión D-NN de la historia. Ninguno queda abierto.]
+## Assumptions that need a decision
+[Everything that had to be assumed because the contract does not say it: type of control, format, behaviour in an edge case. The orchestrator takes them to the human before `Ready`; each answer is a decision D-NN of the story. None stays open.]
 
-| # | Supuesto | Prueba(s) afectada(s) | Decisión (D-NN) |
+| # | Assumption | Affected test(s) | Decision (D-NN) |
 |---|---|---|---|
 
-## RED confirmado
-Ejecución contra la rama base antes de implementar, comprobada por la herramienta que usa la CI: **todas** las pruebas nuevas se ejecutaron y fallaron, y cada una por la razón esperada.
+## Confirmed RED
+Run against the base branch before implementing, checked by the tool CI uses: **every** new test ran and failed, each for the expected reason.
 
-| Escenario | Resultado contra base | Razón del fallo | ¿Es la razón esperada? |
+| Scenario | Result against base | Reason for the failure | Is it the expected reason? |
 |---|---|---|---|
-| | FAIL | [p. ej. 404 en `/api/notifications`] | Sí |
+| | FAIL | [e.g. 404 on `/api/notifications`] | Yes |
 
-- Comando:
-- Salida de la herramienta de RED (literal):
-- Commit base:
-- Artefacto/salida:
+- Command:
+- RED tool output (verbatim):
+- Base commit:
+- Artifact/output:
 
-## Protección
-- Ubicación de suite visible:
-- Ubicación de suite holdout (no accesible al programador):
-- Commit/branch confiable:
-- Mecanismo de protección (L3):
-- Quién puede aprobar cambios:
+## Protection
+- Location of the visible suite:
+- Location of the holdout suite (not accessible to the programmer):
+- Trusted commit/branch:
+- Protection mechanism (L3):
+- Who can approve changes:
 
-## Aprobación
+## Approval
 - QA:
-- Responsable humano que aprobó criterios **y pruebas**:
-- Fecha/commit de baseline:
+- Human owner who approved the criteria **and the tests**:
+- Baseline date/commit:

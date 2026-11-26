@@ -1,32 +1,32 @@
-# Agent Failure Log — [Proyecto]
+# Agent failure log — [Project]
 
-Registro de fallos observados en agentes y de los controles añadidos para evitarlos (AES 09). Se registran hechos observables, no juicios sobre el modelo.
+Failures observed in agents and the controls added to prevent them (AES 09). Observable facts are recorded, not judgements about the model.
 
-## Patrones activos
-| Patrón | Entradas | Control aplicado | Capa | Estado |
+## Active patterns
+| Pattern | Entries | Control applied | Layer | Status |
 |---|---|---|---|---|
-| | | | L1 / L2 / L3 / skill / AGENTS.md | Propuesto / Aprobado / Verificado |
+| | | | L1 / L2 / L3 / template / skill / AGENTS.md | Proposed / Approved / Verified |
 
 ---
 
 ## FL-[NNN] — YYYY-MM-DD
-- **Agente / harness / modelo:**
-- **Tarea / historia:**
-- **Síntoma:** [qué hizo el agente]
-- **Detectado por:** [CI, guardián, verificador, revisión humana]
-- **Causa probable:** [qué faltaba en la tarea, el contexto o los controles]
-- **Control propuesto:** [en orden de dureza: CI → hook → permiso → skill → línea en AGENTS.md]
-- **Aprobado por / fecha:**
-- **Verificado en:** [tarea posterior donde no se repitió]
+- **Agent / harness / model:**
+- **Task / story:**
+- **Symptom:** [what the agent did]
+- **Detected by:** [CI, guard, verifier, human review]
+- **Probable cause:** [what was missing in the task, the context or the controls]
+- **Proposed control:** [in order of strength: CI → hook → permission → template or skill → line in AGENTS.md]
+- **Approved by / date:**
+- **Verified in:** [later task where it did not repeat]
 
-### Ejemplo
+### Example
 
 ## FL-007 — 2026-11-02
-- **Agente / harness / modelo:** programador / OpenCode / [modelo]
-- **Tarea / historia:** TASK-014 (US-005)
-- **Síntoma:** añadió paginación no pedida al listado de notificaciones.
-- **Detectado por:** verificador (señal «funcionalidad no pedida»).
-- **Causa probable:** la tarea no tenía «Fuera de alcance» explícito.
-- **Control propuesto:** la DoR de tarea exige «Fuera de alcance» no vacío en T2/T3.
-- **Aprobado por / fecha:** responsable humano, 2026-11-02.
-- **Verificado en:** TASK-019, sin recurrencia.
+- **Agent / harness / model:** programmer / OpenCode / [model]
+- **Task / story:** TASK-014 (US-005)
+- **Symptom:** added pagination nobody asked for to the notifications list.
+- **Detected by:** verifier ("functionality nobody asked for" signal).
+- **Probable cause:** the task had no explicit "Out of scope".
+- **Proposed control:** the task DoR requires a non-empty "Out of scope" in T2/T3.
+- **Approved by / date:** human owner, 2026-11-02.
+- **Verified in:** TASK-019, no recurrence.
