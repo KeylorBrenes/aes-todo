@@ -83,3 +83,13 @@ Registro de fallos observados en agentes y de los controles añadidos para evita
   - Opcionalmente, una alerta del guardián cuando la producción pase el presupuesto, o un commit pase de N líneas.
 - **Aprobado por / fecha:** — (lo pidió registrar GG_WellCoded, 2026-11-25, para la revisión futura de la metodología)
 - **Verificado en:** —
+
+## FL-008 — 2026-11-26
+- **Agente / harness / modelo:** programmer / opencode deepseek-flash
+- **Tarea / historia:** US-001 TASK-002
+- **Síntoma:** BLOCKED en TASK-002: src/web/src/App.test.tsx:357 envía el formulario vacío para simular un 409; con la validación del cliente ya no llama a la API. App.test.tsx figuraba en 'Pruebas de regresión afectadas' pero no en TASK-002.scope
+- **Detectado por:** Programador (BLOCKED); compuerta de fin de rol
+- **Causa probable:** —
+- **Control propuesto:** Repetición de FL-006 en la misma historia: el control propuesto no se aplicó todavía a TASK-002, escrita antes
+- **Aprobado por / fecha:** —
+- **Verificado en:** —
